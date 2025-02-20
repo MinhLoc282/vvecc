@@ -1,45 +1,88 @@
-import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Typography,
-  Box,
-  Modal,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+import { useState, useEffect } from 'react';
+import { 
+  Table, TableBody, TableCell, TableContainer, TableHead, 
+  TableRow, Paper, Button, Typography, Box, Modal, TextField, 
+  Select, MenuItem, FormControl, InputLabel, CircularProgress
 } from '@mui/material';
+import { useAuth } from '../../hooks/use-auth-client';
+import { BigNumber } from 'ethers';
 
 const LoanMarketplacePage = () => {
-  // Mock data for accepted collaterals (replace with real data from your backend)
-  const [acceptedCollaterals, setAcceptedCollaterals] = useState([
-    { id: 1, stockName: 'AAPL', quantity: 10, owner: '0x123...' },
-    { id: 2, stockName: 'GOOGL', quantity: 5, owner: '0x456...' },
-    { id: 3, stockName: 'TSLA', quantity: 8, owner: '0x789...' },
-  ]);
+  const { getAcceptedCollaterals, offerLoan, contracts, account } = useAuth();
+  const [acceptedCollaterals, setAcceptedCollaterals] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedCollateral, setSelectedCollateral] = useState(null);
+  const [interestRate, setInterestRate] = useState(0.1);
+  const [loanAmount, setLoanAmount] = useState(0);
+  const [duration, setDuration] = useState(6);
+  const [interestRateError, setInterestRateError] = useState('');
+  const [isApproved, setIsApproved] = useState(false);
+  const [loadingApprove, setLoadingApprove] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  const [openModal, setOpenModal] = useState(false); // State to control modal visibility
-  const [selectedCollateral, setSelectedCollateral] = useState(null); // Selected collateral for loan request
-  const [interestRate, setInterestRate] = useState(0.1); // Interest rate (0.1% to 40%)
-  const [loanAmount, setLoanAmount] = useState(0); // Loan amount (cannot exceed collateral value)
-  const [duration, setDuration] = useState(6); // Duration in months
-  const [interestRateError, setInterestRateError] = useState(''); // Error message for interest rate
+  const handleApprove = async () => {
+    if (!selectedCollateral || loanAmount <= 0) return;
+    setLoadingApprove(true);
+    try {
+      const approveTx = await contracts.token.approve(contracts.loan.address, BigNumber.from(loanAmount).mul(BigNumber.from("1000000000000000000")));
+      await approveTx.wait();
+      setIsApproved(true);
+      console.log("Token approved successfully.");
+    } catch (error) {
+      console.error('Error approving token:', error);
+    }
+    setLoadingApprove(false);
+  };
 
-  // Handle open modal for loan request
+  useEffect(() => {
+    const checkApproval = async () => {
+      if (!selectedCollateral || loanAmount <= 0) return;
+  
+      try {
+        const allowance = await contracts.token.allowance(account, contracts.loan.address);
+        const requiredAmount = BigNumber.from(loanAmount).mul(BigNumber.from("1000000000000000000")); // Convert safely
+        setIsApproved(BigNumber.from(allowance).gte(requiredAmount));
+      } catch (error) {
+        console.error('Error checking token allowance:', error);
+      }
+    };
+  
+    checkApproval();
+  }, [loanAmount, selectedCollateral, contracts, account]);
+
+  useEffect(() => {
+    if (contracts.loan) {
+      const fetchCollaterals = async () => {
+        try {
+          const collaterals = await getAcceptedCollaterals();
+
+          const formattedCollaterals = collaterals.map((collateral, index) => ({
+              id: index + 1,
+              owner: collateral[0],
+              stockName: collateral[1],
+              quantity: BigNumber.from(collateral[2]).toNumber(),
+              status: collateral[3] === 0 
+              ? "Pending" 
+              : collateral[3] === 1 
+              ? "Approved" 
+              : collateral[3] === 2 
+              ? "Declined" 
+              : "Cancelled",    
+            }));
+          setAcceptedCollaterals(formattedCollaterals);
+        } catch (error) {
+          console.error('Error fetching accepted collaterals:', error);
+        }
+      };
+      fetchCollaterals();
+    }
+  }, [getAcceptedCollaterals, contracts]);
+
   const handleOpenModal = (collateral) => {
     setSelectedCollateral(collateral);
     setOpenModal(true);
   };
 
-  // Handle close modal
   const handleCloseModal = () => {
     setOpenModal(false);
     setSelectedCollateral(null);
@@ -49,7 +92,6 @@ const LoanMarketplacePage = () => {
     setInterestRateError('');
   };
 
-  // Validate interest rate
   const validateInterestRate = (value) => {
     if (value < 0.1 || value > 40) {
       setInterestRateError('Interest rate must be between 0.1% and 40%.');
@@ -60,28 +102,27 @@ const LoanMarketplacePage = () => {
     }
   };
 
-  // Handle interest rate change
   const handleInterestRateChange = (e) => {
     const value = parseFloat(e.target.value);
     setInterestRate(value);
     validateInterestRate(value);
   };
 
-  // Handle submit loan request
-  const handleSubmitLoanRequest = () => {
+  const handleSubmitLoanRequest = async () => {
     if (
       selectedCollateral &&
       loanAmount > 0 &&
-      loanAmount <= selectedCollateral.quantity &&
-      validateInterestRate(interestRate)
+      validateInterestRate(interestRate) && 
+      isApproved
     ) {
-      console.log('Loan Request Submitted:', {
-        collateral: selectedCollateral,
-        interestRate,
-        loanAmount,
-        duration,
-      });
-      handleCloseModal();
+      setLoadingSubmit(true);
+      try {
+        await offerLoan(selectedCollateral.id, interestRate * 100, BigNumber.from(loanAmount).mul(BigNumber.from("1000000000000000000")), duration);
+        handleCloseModal();
+      } catch (error) {
+        console.error('Error submitting loan request:', error);
+      }
+      setLoadingSubmit(false);
     }
   };
 
@@ -90,118 +131,71 @@ const LoanMarketplacePage = () => {
       <Typography variant="h4" color="primary" sx={{ color: 'rgb(0, 50, 99)', marginBottom: 3 }}>
         Loan Marketplace
       </Typography>
-
       <TableContainer component={Paper} sx={{ backgroundColor: 'white' }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Stock Name</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Quantity</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Owner</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Action</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Stock Name</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Quantity</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Owner</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {acceptedCollaterals.map((collateral) => (
-              <TableRow key={collateral.id}>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.stockName}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.quantity}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.owner}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      color: '#236cb2',
-                      borderColor: '#236cb2',
-                      '&:hover': { borderColor: '#1a4f8a' },
-                    }}
-                    onClick={() => handleOpenModal(collateral)}
-                  >
-                    Request Loan
-                  </Button>
+            {acceptedCollaterals.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  No collaterals found.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              acceptedCollaterals.map((collateral) => (
+                <TableRow key={collateral.id}>
+                  <TableCell>{collateral.stockName}</TableCell>
+                  <TableCell>{collateral.quantity}</TableCell>
+                  <TableCell>{collateral.owner}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      sx={{ color: '#236cb2', borderColor: '#236cb2' }}
+                      onClick={() => handleOpenModal(collateral)}
+                    >
+                      Request Loan
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* Loan Request Modal */}
-      <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        aria-labelledby="loan-request-modal"
-        aria-describedby="loan-request-form"
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 400,
-            backgroundColor: 'white',
-            padding: 3,
-            borderRadius: 2,
-            boxShadow: 24,
-          }}
-        >
-          <Typography variant="h6" sx={{ color: 'rgb(0, 50, 99)', marginBottom: 2 }}>
-            Request Loan for {selectedCollateral?.stockName}
-          </Typography>
-          <TextField
-            label="Interest Rate (%)"
-            type="number"
-            value={interestRate}
-            onChange={handleInterestRateChange}
-            fullWidth
-            required
-            inputProps={{ min: 0.1, max: 40, step: 0.1 }}
-            error={!!interestRateError}
-            helperText={interestRateError}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Loan Amount"
-            type="number"
-            value={loanAmount}
-            onChange={(e) => setLoanAmount(parseFloat(e.target.value))}
-            fullWidth
-            required
-            inputProps={{ max: selectedCollateral?.quantity }}
-            sx={{ marginBottom: 2 }}
-          />
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, backgroundColor: 'white', padding: 3, borderRadius: 2, boxShadow: 24 }}>
+          <Typography variant="h6">Request Loan for {selectedCollateral?.stockName}</Typography>
+          <TextField label="Interest Rate (%)" type="number" value={interestRate} onChange={handleInterestRateChange} fullWidth required inputProps={{ min: 0.1, max: 40, step: 0.1 }} error={!!interestRateError} helperText={interestRateError} sx={{ marginBottom: 2 }} />
+          <TextField label="Loan Amount" type="number" value={loanAmount} onChange={(e) => setLoanAmount(parseFloat(e.target.value))} fullWidth required inputProps={{ max: selectedCollateral?.quantity }} sx={{ marginBottom: 2 }} />
           <FormControl fullWidth sx={{ marginBottom: 2 }}>
             <InputLabel>Duration</InputLabel>
-            <Select
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              label="Duration"
-            >
+            <Select value={duration} onChange={(e) => setDuration(e.target.value)} label="Duration">
               <MenuItem value={6}>6 Months</MenuItem>
               <MenuItem value={8}>8 Months</MenuItem>
               <MenuItem value={12}>12 Months</MenuItem>
-              <MenuItem value={24}>1 Year</MenuItem>
-              <MenuItem value={36}>1.5 Years</MenuItem>
-              <MenuItem value={48}>2 Years</MenuItem>
+              <MenuItem value={12}>1 Year</MenuItem>
+              <MenuItem value={18}>1.5 Years</MenuItem>
+              <MenuItem value={24}>2 Years</MenuItem>
             </Select>
           </FormControl>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button
-              variant="outlined"
-              sx={{ color: '#236cb2', borderColor: '#236cb2' }}
-              onClick={handleCloseModal}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              sx={{ backgroundColor: '#236cb2', '&:hover': { backgroundColor: '#1a4f8a' } }}
-              onClick={handleSubmitLoanRequest}
-              disabled={!!interestRateError || loanAmount <= 0 || loanAmount > selectedCollateral?.quantity}
-            >
-              Submit
-            </Button>
+            <Button variant="outlined" sx={{ color: '#236cb2', borderColor: '#236cb2' }} onClick={handleCloseModal}>Cancel</Button>
+            {!isApproved ? (
+              <Button variant="contained" sx={{ backgroundColor: '#236cb2' }} onClick={handleApprove} disabled={loanAmount <= 0 || loadingApprove}>
+                {loadingApprove ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Approve'}
+              </Button>
+            ) : (
+              <Button variant="contained" sx={{ backgroundColor: '#236cb2' }} onClick={handleSubmitLoanRequest} disabled={!!interestRateError || loanAmount <= 0 || loadingSubmit}>
+                {loadingSubmit ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Submit'}
+              </Button>
+            )}
           </Box>
         </Box>
       </Modal>

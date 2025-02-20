@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -14,48 +14,83 @@ import {
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { useAuth } from '../../hooks/use-auth-client';
+import { BigNumber } from 'ethers';
 
 const MyCollateralPage = () => {
-  const [collaterals, setCollaterals] = useState([
-    { id: 1, stockName: 'AAPL', quantity: 10, status: 'Pending' },
-    { id: 2, stockName: 'GOOGL', quantity: 5, status: 'Approved' },
-    { id: 3, stockName: 'TSLA', quantity: 8, status: 'Declined' },
-  ]);
-
-  const [openModal, setOpenModal] = useState(false); // State to control modal visibility
+  const { getUserCollaterals, addCollateral, updateCollateralStatus, account } = useAuth();
+  const [collaterals, setCollaterals] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
   const [stockName, setStockName] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Handle cancel collateral
-  const handleCancel = (id) => {
-    setCollaterals(collaterals.filter((collateral) => collateral.id !== id));
+  const fetchCollaterals = async () => {
+    try {
+      setLoading(true);
+      const userCollaterals = await getUserCollaterals(account);
+
+      const formattedCollaterals = userCollaterals.map((collateral, index) => ({
+        id: index + 1,
+        owner: collateral[0],
+        stockName: collateral[1],
+        quantity: BigNumber.from(collateral[2]).toNumber(),
+        status: collateral[3] === 0 
+        ? "Pending" 
+        : collateral[3] === 1 
+        ? "Approved" 
+        : collateral[3] === 2 
+        ? "Declined" 
+        : "Cancelled",    
+    }));
+    setCollaterals(formattedCollaterals);
+    } catch (error) {
+      console.error("Error fetching collaterals:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle open modal
+  const handleAddCollateral = async () => {
+    if (!stockName || !quantity) return;
+
+    try {
+      setLoading(true);
+      await addCollateral(stockName, parseInt(quantity, 10));
+      fetchCollaterals();
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error adding collateral:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async (collateralId) => {
+    try {
+      setLoading(true);
+      await updateCollateralStatus(collateralId, 3);
+      fetchCollaterals();
+    } catch (error) {
+      console.error("Error cancelling collateral:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenModal = () => {
     setOpenModal(true);
   };
 
-  // Handle close modal
   const handleCloseModal = () => {
     setOpenModal(false);
     setStockName('');
     setQuantity('');
   };
 
-  // Handle add collateral
-  const handleAddCollateral = () => {
-    if (stockName && quantity) {
-      const newCollateral = {
-        id: collaterals.length + 1, // Generate a unique ID (replace with a better method in production)
-        stockName,
-        quantity: parseInt(quantity, 10),
-        status: 'Pending',
-      };
-      setCollaterals([...collaterals, newCollateral]);
-      handleCloseModal();
-    }
-  };
+  useEffect(() => {
+    if (account) fetchCollaterals();
+  }, [account]);
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
@@ -91,39 +126,43 @@ const MyCollateralPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {collaterals.map((collateral) => (
-              <TableRow key={collateral.id}>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.stockName}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.quantity}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.status}</TableCell>
-                <TableCell>
-                  {collateral.status === 'Pending' && (
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        color: '#236cb2',
-                        borderColor: '#236cb2',
-                        '&:hover': { borderColor: '#1a4f8a' },
-                      }}
-                      onClick={() => handleCancel(collateral.id)}
-                    >
-                      Cancel
-                    </Button>
-                  )}
+            {collaterals?.length > 0 ? (
+              collaterals.map((collateral) => (
+                <TableRow key={collateral.id}>
+                  <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.stockName}</TableCell>
+                  <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.quantity}</TableCell>
+                  <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{collateral.status}</TableCell>
+                  <TableCell>
+                    {collateral.status === 'Pending' && (
+                      <Button
+                        variant="outlined"
+                        sx={{
+                          color: '#236cb2',
+                          borderColor: '#236cb2',
+                          '&:hover': { borderColor: '#1a4f8a' },
+                        }}
+                        onClick={() => handleCancel(collateral.id)}
+                        disabled={loading}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} sx={{ textAlign: 'center', color: 'gray' }}>
+                  No collaterals found.
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
       {/* Add Collateral Modal */}
-      <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        aria-labelledby="add-collateral-modal"
-        aria-describedby="add-collateral-form"
-      >
+      <Modal open={openModal} onClose={handleCloseModal}>
         <Box
           sx={{
             position: 'absolute',
@@ -169,8 +208,9 @@ const MyCollateralPage = () => {
               variant="contained"
               sx={{ backgroundColor: '#236cb2', '&:hover': { backgroundColor: '#1a4f8a' } }}
               onClick={handleAddCollateral}
+              disabled={!stockName || !quantity || loading}
             >
-              Add
+              {loading ? 'Adding...' : 'Add'}
             </Button>
           </Box>
         </Box>

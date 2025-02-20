@@ -1,40 +1,65 @@
-import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Typography,
-  Box,
-} from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Typography, Box } from '@mui/material';
+import { useAuth } from '../../hooks/use-auth-client';
+import { BigNumber } from 'ethers';
 
 const AdminDashboardPage = () => {
-  const [collateralRequests, setCollateralRequests] = useState([
-    { id: 1, stockName: 'AAPL', quantity: 10, owner: '0x123...', status: 'Pending' },
-    { id: 2, stockName: 'GOOGL', quantity: 5, owner: '0x456...', status: 'Pending' },
-    { id: 3, stockName: 'TSLA', quantity: 8, owner: '0x789...', status: 'Pending' },
-  ]);
+  const { getPendingCollaterals, updateCollateralStatus, contracts } = useAuth();
+  const [collateralRequests, setCollateralRequests] = useState([]);
 
-  // Handle approving collateral
-  const handleApprove = (id) => {
-    setCollateralRequests(
-      collateralRequests.map((request) =>
-        request.id === id ? { ...request, status: 'Approved' } : request
-      )
-    );
+  useEffect(() => {
+    if (contracts.loan) {
+      const fetchCollaterals = async () => {
+        try {
+          const collaterals = await getPendingCollaterals();
+          const formattedCollaterals = collaterals.map((collateral, index) => ({
+                  id: index + 1,
+                  owner: collateral[0],
+                  stockName: collateral[1],
+                  quantity: BigNumber.from(collateral[2]).toNumber(),
+                  status: collateral[3] === 0 
+                  ? "Pending" 
+                  : collateral[3] === 1 
+                  ? "Approved" 
+                  : collateral[3] === 2 
+                  ? "Declined" 
+                  : "Cancelled",    
+              }));
+          setCollateralRequests(formattedCollaterals);
+        } catch (error) {
+          console.error('Error fetching pending collaterals:', error);
+        }
+      };
+  
+      fetchCollaterals();
+    }
+    
+  }, [getPendingCollaterals, contracts]);
+
+  const handleApprove = async (id) => {
+    try {
+      await updateCollateralStatus(id, 1);
+      setCollateralRequests(
+        collateralRequests.map((request) =>
+          request.id === id ? { ...request, status: 'Approved' } : request
+        )
+      );
+    } catch (error) {
+      console.error('Error approving collateral:', error);
+    }
   };
 
-  // Handle declining collateral
-  const handleDecline = (id) => {
-    setCollateralRequests(
-      collateralRequests.map((request) =>
-        request.id === id ? { ...request, status: 'Declined' } : request
-      )
-    );
+  const handleDecline = async (id) => {
+    try {
+      await updateCollateralStatus(id, 2);
+      setCollateralRequests(
+        collateralRequests.map((request) =>
+          request.id === id ? { ...request, status: 'Declined' } : request
+        )
+      );
+    } catch (error) {
+      console.error('Error declining collateral:', error);
+    }
   };
 
   return (
@@ -43,49 +68,55 @@ const AdminDashboardPage = () => {
         Admin Dashboard
       </Typography>
 
-      <TableContainer component={Paper} sx={{ backgroundColor: 'white' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Stock Name</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Quantity</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Owner</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Status</TableCell>
-              <TableCell sx={{ color: 'rgb(0, 50, 99)', fontWeight: 'bold' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {collateralRequests.map((request) => (
-              <TableRow key={request.id}>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{request.stockName}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{request.quantity}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{request.owner}</TableCell>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{request.status}</TableCell>
-                <TableCell>
-                  {request.status === 'Pending' && (
-                    <>
-                      <Button
-                        variant="contained"
-                        sx={{ backgroundColor: '#236cb2', '&:hover': { backgroundColor: '#1a4f8a' }, marginRight: 1 }}
-                        onClick={() => handleApprove(request.id)}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        sx={{ color: '#d32f2f', borderColor: '#d32f2f', '&:hover': { borderColor: '#9a0007' } }}
-                        onClick={() => handleDecline(request.id)}
-                      >
-                        Decline
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
+      {collateralRequests.length === 0 ? (
+        <Typography variant="h6" color="textSecondary" sx={{ textAlign: 'center', marginTop: 3 }}>
+          No pending collaterals
+        </Typography>
+      ) : (
+        <TableContainer component={Paper} sx={{ backgroundColor: 'white' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>Stock Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Quantity</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Owner</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Action</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {collateralRequests.map((request) => (
+                <TableRow key={request.id}>
+                  <TableCell>{request.stockName}</TableCell>
+                  <TableCell>{request.quantity}</TableCell>
+                  <TableCell>{request.status}</TableCell>
+                  <TableCell>{request.owner}</TableCell>
+                  <TableCell>
+                    {request.status === 'Pending' && (
+                      <>
+                        <Button
+                          variant="contained"
+                          sx={{ marginRight: 1 }}
+                          onClick={() => handleApprove(request.id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDecline(request.id)}
+                        >
+                          Decline
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Box>
   );
 };

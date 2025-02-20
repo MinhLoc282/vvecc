@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -15,16 +15,14 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useAuth } from '../../hooks/use-auth-client';
 
 const AdminUserManagementPage = () => {
-  const [admins, setAdmins] = useState([
-    { id: 1, address: '0x123...abc' },
-    { id: 2, address: '0x456...def' },
-    { id: 3, address: '0x789...ghi' },
-  ]);
-
+  const { getAdmins, addAdmin, removeAdmin } = useAuth();
+  const [admins, setAdmins] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [newAdminAddress, setNewAdminAddress] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Handle open modal
   const handleOpenModal = () => {
@@ -37,18 +35,47 @@ const AdminUserManagementPage = () => {
     setNewAdminAddress('');
   };
 
-  // Handle add admin
-  const handleAddAdmin = () => {
-    if (newAdminAddress.trim() !== '') {
-      setAdmins([...admins, { id: admins.length + 1, address: newAdminAddress }]);
-      handleCloseModal();
+  const fetchAdmins = async () => {
+    try {
+      const adminAddresses = await getAdmins();
+      setAdmins(adminAddresses.map((address, index) => ({ id: index, address })));
+    } catch (error) {
+      console.error("Error fetching admins:", error);
     }
   };
 
-  // Handle remove admin
-  const handleRemoveAdmin = (id) => {
-    setAdmins(admins.filter((admin) => admin.id !== id));
+  // Add a new admin
+  const handleAddAdmin = async () => {
+    if (!newAdminAddress.trim()) return;
+
+    try {
+      setLoading(true);
+      await addAdmin(newAdminAddress);
+      fetchAdmins();
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error adding admin:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Remove an admin
+  const handleRemoveAdmin = async (adminAddress) => {
+    try {
+      setLoading(true);
+      await removeAdmin(adminAddress);
+      fetchAdmins();
+    } catch (error) {
+      console.error("Error removing admin:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
@@ -82,21 +109,30 @@ const AdminUserManagementPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {admins.map((admin) => (
-              <TableRow key={admin.id}>
-                <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{admin.address}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DeleteIcon />}
-                    sx={{ color: 'red', borderColor: 'red', '&:hover': { borderColor: 'darkred' } }}
-                    onClick={() => handleRemoveAdmin(admin.id)}
-                  >
-                    Remove
-                  </Button>
+            {admins.length > 0 ? (
+              admins.map((admin) => (
+                <TableRow key={admin.id}>
+                  <TableCell sx={{ color: 'rgb(133, 134, 151)' }}>{admin.address}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      startIcon={<DeleteIcon />}
+                      sx={{ color: 'red', borderColor: 'red', '&:hover': { borderColor: 'darkred' } }}
+                      onClick={() => handleRemoveAdmin(admin.address)}
+                      disabled={loading}
+                    >
+                      Remove
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={2} sx={{ textAlign: 'center', color: 'gray' }}>
+                  No admins found.
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -135,9 +171,9 @@ const AdminUserManagementPage = () => {
               variant="contained"
               sx={{ backgroundColor: '#236cb2', '&:hover': { backgroundColor: '#1a4f8a' } }}
               onClick={handleAddAdmin}
-              disabled={!newAdminAddress.trim()}
+              disabled={!newAdminAddress.trim() || loading}
             >
-              Add
+              {loading ? 'Adding...' : 'Add'}
             </Button>
           </Box>
         </Box>

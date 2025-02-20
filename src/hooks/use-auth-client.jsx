@@ -1,24 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { ethers } from 'ethers';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import { ADMIN_ADDRESSES } from '../constants';
-
-// Your contract addresses
-const swapContractAddress = 'YOUR_SWAP_CONTRACT_ADDRESS';
-const ledgerContractAddress = 'YOUR_LEDGER_CONTRACT_ADDRESS';
-const faucetContractAddress = 'YOUR_FAUCET_CONTRACT_ADDRESS';
-const depositContractAddress = 'YOUR_DEPOSIT_CONTRACT_ADDRESS';
-const aggregatorContractAddress = 'YOUR_AGGREGATOR_CONTRACT_ADDRESS';
-const borrowContractAddress = 'YOUR_BORROW_CONTRACT_ADDRESS';
-
-// Your contract ABIs
-const swapABI = [ /* Your Swap Contract ABI */ ];
-const ledgerABI = [ /* Your Ledger Contract ABI */ ];
-const faucetABI = [ /* Your Faucet Contract ABI */ ];
-const depositABI = [ /* Your Deposit Contract ABI */ ];
-const aggregatorABI = [ /* Your Aggregator Contract ABI */ ];
-const borrowABI = [ /* Your Borrow Contract ABI */ ];
+import loanABI from '../constants/loan_abi.json'
+import tokenABI from '../constants/token_abi.json'
+const loanContractAddress = '0xD713C94b6DbfBf885FF6C6c2185311a290C07649';
+const tokenContractAddress = '0x69dF8a0E5B51A0122f1e7A34Ce762FB38e354Bfe';
 
 const AuthContext = createContext();
 
@@ -33,21 +21,9 @@ export const useAuthClient = () => {
 
   // Initialize contracts
   const initializeContracts = (signerInstance) => {
-    const swapContract = new ethers.Contract(swapContractAddress, swapABI, signerInstance);
-    const ledgerContract = new ethers.Contract(ledgerContractAddress, ledgerABI, signerInstance);
-    const faucetContract = new ethers.Contract(faucetContractAddress, faucetABI, signerInstance);
-    const depositContract = new ethers.Contract(depositContractAddress, depositABI, signerInstance);
-    const aggregatorContract = new ethers.Contract(aggregatorContractAddress, aggregatorABI, signerInstance);
-    const borrowContract = new ethers.Contract(borrowContractAddress, borrowABI, signerInstance);
-
-    setContracts({
-      swapActor: swapContract,
-      ledgerActor: ledgerContract,
-      faucetActor: faucetContract,
-      depositActor: depositContract,
-      aggregatorActor: aggregatorContract,
-      borrowActor: borrowContract,
-    });
+    const loanContract = new ethers.Contract(loanContractAddress, loanABI, signerInstance);
+    const tokenContract = new ethers.Contract(tokenContractAddress, tokenABI, signerInstance);
+    setContracts({ loan: loanContract, token: tokenContract });
   };
 
   // Create WalletConnect provider
@@ -235,6 +211,133 @@ export const useAuthClient = () => {
     return normalizedAdminAddresses.includes(normalizedUserAddress);
   };
 
+  // Loan contract functions
+  const addCollateral = async (stockName, quantity) => {
+    try {
+      const tx = await contracts.loan
+        .addCollateral(stockName, quantity);
+      await tx.wait();
+      console.log("Collateral added successfully", tx);
+    } catch (error) {
+      console.error("Error adding collateral:", error);
+    }
+  };
+
+  const updateCollateralStatus = async (collateralId, status) => {
+    try {
+      const tx = await contracts.loan
+        .updateCollateralStatus(collateralId, status);
+      await tx.wait();
+      console.log("Collateral status updated successfully", tx);
+    } catch (error) {
+      console.error("Error updating collateral status:", error);
+    }
+  };
+
+  const offerLoan = async (collateralId, interestRate, loanAmount, duration) => {
+    try {
+      const tx = await contracts.loan
+        .offerLoan(collateralId, interestRate, loanAmount, duration);
+      await tx.wait();
+      console.log("Loan offered successfully", tx);
+    } catch (error) {
+      console.error("Error offering loan:", error);
+    }
+  };
+
+  const acceptLoan = async (loanId) => {
+    try {
+      const tx = await contracts.loan
+        .acceptLoan(loanId);
+      await tx.wait();
+      console.log("Loan accepted successfully", tx);
+    } catch (error) {
+      console.error("Error accepting loan:", error);
+    }
+  };
+
+  const cancelLoan = async (loanId) => {
+    try {
+      const tx = await contracts.loan
+        .cancelLoan(loanId);
+      await tx.wait();
+      console.log("Loan canceled successfully", tx);
+    } catch (error) {
+      console.error("Error canceling loan:", error);
+    }
+  };
+
+  const addAdmin = async (newAdmin) => {
+    try {
+      const tx = await contracts.loan
+        .addAdmin(newAdmin);
+      await tx.wait();
+      console.log("Admin added successfully", tx);
+    } catch (error) {
+      console.error("Error adding admin:", error);
+    }
+  };
+
+  const removeAdmin = async (adminToRemove) => {
+    try {
+      const tx = await contracts.loan.removeAdmin(adminToRemove);
+      await tx.wait();
+      console.log("Admin removed successfully", tx);
+    } catch (error) {
+      console.error("Error removing admin:", error);
+    }
+  };
+  
+
+  const getAdmins = async () => {
+    try {
+      const admins = await contracts.loan.getAdmins();
+      return admins;
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+    }
+  };  
+
+  const getUserCollaterals = async (userAddress) => {
+    try {
+      return await contracts.loan.getUserCollaterals(userAddress);
+    } catch (error) {
+      console.error("Error fetching user collaterals:", error);
+    }
+  };
+
+  const getPendingCollaterals = async () => {
+    try {
+      return await contracts.loan.getCollateralsByStatus(0);
+    } catch (error) {
+      console.error("Error fetching pending collaterals:", error);
+    }
+  };
+
+  const getAcceptedCollaterals = async () => {
+    try {
+      return await contracts.loan.getCollateralsByStatus(1);
+    } catch (error) {
+      console.error("Error fetching pending collaterals:", error);
+    }
+  };
+
+  const getLoansForUserCollaterals = async (userAddress) => {
+    try {
+      return await contracts.loan.getLoansForUserCollaterals(userAddress);
+    } catch (error) {
+      console.error("Error fetching offered loans:", error);
+    }
+  };
+
+  const getActiveLoansForUser = async (userAddress) => {
+    try {
+      return await contracts.loan.getActiveLoansForUser(userAddress);
+    } catch (error) {
+      console.error("Error fetching active loans:", error);
+    }
+  };
+
   return {
     isAuthenticated,
     login,
@@ -244,6 +347,19 @@ export const useAuthClient = () => {
     signer,
     account,
     contracts,
+    addCollateral,
+    updateCollateralStatus,
+    offerLoan,
+    acceptLoan,
+    cancelLoan,
+    addAdmin,
+    removeAdmin,
+    getAdmins,
+    getUserCollaterals,
+    getPendingCollaterals,
+    getAcceptedCollaterals,
+    getLoansForUserCollaterals,
+    getActiveLoansForUser,
   };
 };
 
