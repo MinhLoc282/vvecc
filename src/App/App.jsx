@@ -1,0 +1,86 @@
+import React from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
+
+import { AuthProvider } from '../hooks/use-auth-client';
+
+import { LOCATION } from '../constants';
+
+import Layout from '../layout/Layout';
+import ProtectedRoute from '../components/ProtectedRoute/ProtectedRoute';
+// New Pages
+import MyCollateralPage from '../pages/collateral/MyCollateralPage';
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
+import LoanMarketplacePage from '../pages/loan/LoanMarketplacePage';
+import MyLoansPage from '../pages/loan/MyLoansPage';
+import LoanDetailsPage from '../pages/loan/LoanDetailsPage';
+import AdminUserManagementPage from '../pages/admin/AdminUserManagementPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={<Navigate to={LOCATION.LOAN_MARKETPLACE} replace />}
+        />
+
+        {/* My Collateral Page */}
+        <Route path={LOCATION.MY_COLLATERAL} element={<Layout />}>
+          <Route index element={<MyCollateralPage />} />
+        </Route>
+
+        {/* Admin Dashboard Page (for approving collateral) */}
+        <Route
+          path={LOCATION.ADMIN_DASHBOARD}
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboardPage />} />
+        </Route>
+
+        {/* Loan Marketplace Page */}
+        <Route path={LOCATION.LOAN_MARKETPLACE} element={<Layout />}>
+          <Route index element={<LoanMarketplacePage />} />
+        </Route>
+
+        {/* My Loans Page */}
+        <Route path={LOCATION.MY_LOANS} element={<Layout />}>
+          <Route index element={<MyLoansPage />} />
+        </Route>
+
+        {/* Loan Details Page */}
+        <Route path={LOCATION.LOAN_DETAILS} element={<Layout />}>
+          <Route index element={<LoanDetailsPage />} />
+        </Route>
+
+        {/* Admin User Management Page (for owner to add/remove admins) */}
+        <Route
+          path={LOCATION.ADMIN_USER_MANAGEMENT}
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminUserManagementPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default function MyApp() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}

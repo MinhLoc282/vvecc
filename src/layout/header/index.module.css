@@ -1,0 +1,155 @@
+.AuthSection {
+  width: 100%;
+  height: 62px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 1);
+  border-bottom: 1px solid rgba(35, 108, 178, 0.4);
+  z-index: 2;
+}
+
+.AuthSection button {
+  font-weight: 600;
+  height: 42px;
+}
+
+.AuthSection img {
+  margin: 8px 0 0 32px;
+  height: 36px;
+  width: auto;
+}
+
+.LeftContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.DesktopNav {
+  display: flex;
+  align-items: center;
+}
+
+.DesktopAuthButtons {
+  display: flex;
+  align-items: center;
+}
+
+.HamburgerButton {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #236CB2;
+}
+
+.MobileMenu {
+  display: none;
+}
+
+.LoginButton {
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.LoginIcon {
+  align-self: center;
+}
+
+/* Tablet Breakpoint */
+@media screen and (max-width: 1024px) {
+  .AuthSection {
+    padding: 0 12px;
+  }
+
+  .AuthSection img {
+    height: 32px;
+  }
+
+  .LoginButton {
+    margin-left: 8px;
+  }
+}
+
+/* Mobile Breakpoint */
+@media screen and (max-width: 768px) {
+  .AuthSection {
+    height: 56px;
+  }
+
+  .AuthSection img {
+    height: 28px;
+  }
+
+  .AuthSection button {
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .DesktopNav {
+    display: none;
+  }
+
+  .HamburgerButton {
+    display: block;
+  }
+
+  .MobileMenu {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 100%;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 16px 0;
+  }
+
+  .MobileMenu.MenuOpen {
+    display: block;
+  }
+
+  .MobileAuthButtons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+    padding: 0 16px;
+  }
+
+  .LoginIcon {
+    transform: scale(0.9);
+  }
+}
+
+/* Small Mobile Breakpoint */
+@media screen and (max-width: 480px) {
+  .AuthSection {
+    padding: 0 8px;
+  }
+
+  .AuthSection img {
+    height: 24px;
+  }
+
+  .AuthSection button {
+    height: 34px;
+    font-size: 13px;
+    padding: 0 10px;
+  }
+
+  .LoginButton {
+    margin-left: 4px;
+  }
+
+  .LoginIcon {
+    transform: scale(0.8);
+  }
+}
