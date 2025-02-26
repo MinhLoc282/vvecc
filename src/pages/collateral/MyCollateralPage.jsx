@@ -16,6 +16,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { useAuth } from '../../hooks/use-auth-client';
 import { BigNumber } from 'ethers';
+import { toast } from 'react-toastify';
 
 const MyCollateralPage = () => {
   const { getUserCollaterals, addCollateral, updateCollateralStatus, account } = useAuth();
@@ -30,19 +31,20 @@ const MyCollateralPage = () => {
       setLoading(true);
       const userCollaterals = await getUserCollaterals(account);
 
-      const formattedCollaterals = userCollaterals.map((collateral, index) => ({
-        id: index + 1,
-        owner: collateral[0],
-        stockName: collateral[1],
-        quantity: BigNumber.from(collateral[2]).toNumber(),
-        status: collateral[3] === 0 
-        ? "Pending" 
-        : collateral[3] === 1 
-        ? "Approved" 
-        : collateral[3] === 2 
-        ? "Declined" 
-        : "Cancelled",    
-    }));
+      const formattedCollaterals = userCollaterals.map((collateral) => ({
+        id: BigNumber.from(collateral[0]).toNumber(),
+        owner: collateral[1],
+        stockName: collateral[2],
+        quantity: BigNumber.from(collateral[3]).toNumber(),
+        status: collateral[4] === 0 
+            ? "Pending" 
+            : collateral[4] === 1 
+            ? "Approved" 
+            : collateral[4] === 2 
+            ? "Declined" 
+            : "Cancelled",
+        acceptedLoanId: BigNumber.from(collateral[5]).toNumber(),
+      }));
     setCollaterals(formattedCollaterals);
     } catch (error) {
       console.error("Error fetching collaterals:", error);
@@ -59,8 +61,10 @@ const MyCollateralPage = () => {
       await addCollateral(stockName, parseInt(quantity, 10));
       fetchCollaterals();
       handleCloseModal();
+      toast.success("Added collaterals successfully!")
     } catch (error) {
       console.error("Error adding collateral:", error);
+      toast.error('Failed to add collateral.');
     } finally {
       setLoading(false);
     }
@@ -71,8 +75,10 @@ const MyCollateralPage = () => {
       setLoading(true);
       await updateCollateralStatus(collateralId, 3);
       fetchCollaterals();
+      toast.success("Cancel collaterals successfully!")
     } catch (error) {
       console.error("Error cancelling collateral:", error);
+      toast.error('Failed to cancel collateral.');
     } finally {
       setLoading(false);
     }

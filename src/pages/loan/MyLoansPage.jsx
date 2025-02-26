@@ -12,9 +12,11 @@ import {
   Box,
   Tabs,
   Tab,
+  CircularProgress,
 } from '@mui/material';
 import { useAuth } from '../../hooks/use-auth-client';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
+import { toast } from 'react-toastify';
 
 const MyLoansPage = () => {
   const { getLoansForUserCollaterals, getActiveLoansForUser, acceptLoan, cancelLoan, contracts, account } = useAuth();
@@ -22,6 +24,8 @@ const MyLoansPage = () => {
   const [collateralOffers, setCollateralOffers] = useState([]);
   const [myActiveLoans, setMyActiveLoans] = useState([]);
   const [tabValue, setTabValue] = useState(0);
+  const [loadingAccept, setLoadingAccept] = useState(false);
+  const [loadingCancel, setLoadingCancel] = useState({});
 
   const fetchLoans = async () => {
     try {
@@ -42,22 +46,36 @@ const MyLoansPage = () => {
   }, [getLoansForUserCollaterals, getActiveLoansForUser, contracts, account]);
 
   const handleAcceptLoan = async (loanId) => {
+    setLoadingAccept(true);
     try {
       await acceptLoan(loanId);
       fetchLoans();
+      toast.success('Loan accepted successfully!');
     } catch (error) {
       console.error('Error accepting loan:', error);
+      toast.error('Failed to accept loan.');
+    } finally {
+      setLoadingAccept(false);
     }
   };
 
   const handleCancelLoan = async (loanId) => {
+    setLoadingCancel((prev) => ({ ...prev, [loanId]: true }));
     try {
       await cancelLoan(loanId);
       fetchLoans();
+      toast.success('Loan canceled successfully!');
     } catch (error) {
       console.error('Error canceling loan:', error);
+      toast.error('Failed to cancel loan.');
+    } finally {
+      setLoadingCancel((prev) => ({ ...prev, [loanId]: false }));
     }
   };
+
+  const filteredCollateralOffers = collateralOffers.filter(
+    (offer) => offer.accepted || (offer.accepted === false && BigNumber.from(offer.acceptedLoanId).toNumber() === 0)
+  );
 
   return (
     <Box sx={{ padding: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
@@ -85,18 +103,22 @@ const MyLoansPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {collateralOffers?.map((offer) => (
+              {filteredCollateralOffers?.map((offer) => (
                 <TableRow key={offer.loanId}>
                   <TableCell>{offer.stockName}</TableCell>
                   <TableCell>{offer.quantity?.toString()}</TableCell>
                   <TableCell>{offer.lender}</TableCell>
-                  <TableCell>{offer.interestRate?.toString()}%</TableCell>
+                  <TableCell>{BigNumber.from(offer.interestRate).div(100).toString()}%</TableCell>
                   <TableCell>${ethers.utils?.formatUnits(offer.loanAmount, 18)}</TableCell>
                   <TableCell>{offer.duration?.toString()} months</TableCell>
                   <TableCell>
-                      {!offer.accepted ? (
-                          <Button onClick={() => handleAcceptLoan(offer.loanId)}>Accept</Button>
-                      ) : <Button disabled>Accepted</Button>}
+                    {!offer.accepted ? (
+                      <Button onClick={() => handleAcceptLoan(offer.loanId)} disabled={loadingAccept}>
+                        {loadingAccept ? <CircularProgress size={24} /> : 'Accept'}
+                      </Button>
+                    ) : (
+                      <Button disabled>Accepted</Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -125,13 +147,23 @@ const MyLoansPage = () => {
                   <TableCell>{loan.stockName}</TableCell>
                   <TableCell>{loan.quantity?.toString()}</TableCell>
                   <TableCell>{loan.collateralOwner}</TableCell>
-                  <TableCell>{loan.interestRate?.toString()}%</TableCell>
+                  <TableCell>{BigNumber.from(loan.interestRate).div(100).toString()}%</TableCell>
                   <TableCell>${ethers.utils?.formatUnits(loan.loanAmount, 18)}</TableCell>
                   <TableCell>{loan.duration?.toString()} months</TableCell>
                   <TableCell>
-                      {!loan.accepted ? (
-                          <Button color="error" onClick={() => handleCancelLoan(loan.loanId)}>Cancel</Button>
-                      ) : <Button disabled>Accepted</Button>}
+                    {!loan.accepted ? (
+                      BigNumber.from(loan.acceptedLoanId).toNumber() !== 0 ? (
+                        <Button color="error" onClick={() => handleCancelLoan(loan.loanId)} disabled={loadingCancel[loan.loanId]}>
+                          {loadingCancel[loan.loanId] ? <CircularProgress size={24} /> : 'Reclaim'}
+                        </Button>
+                      ) : (
+                        <Button color="error" onClick={() => handleCancelLoan(loan.loanId)} disabled={loadingCancel[loan.loanId]}>
+                          {loadingCancel[loan.loanId] ? <CircularProgress size={24} /> : 'Cancel'}
+                        </Button>
+                      )
+                    ) : (
+                      <Button disabled>Accepted</Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

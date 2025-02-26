@@ -2,11 +2,12 @@ import { createContext, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { ethers } from 'ethers';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
-import { ADMIN_ADDRESSES } from '../constants';
 import loanABI from '../constants/loan_abi.json'
+import loanNFTABI from '../constants/loan_nft_abi.json'
 import tokenABI from '../constants/token_abi.json'
-const loanContractAddress = '0xD713C94b6DbfBf885FF6C6c2185311a290C07649';
+const loanContractAddress = '0x09D835741ad7c0eB86A1687B754154E3A9c3Ec85';
 const tokenContractAddress = '0x69dF8a0E5B51A0122f1e7A34Ce762FB38e354Bfe';
+const loanNFTContractAddress = '0xC05Ec1C0f47D066d207150C8A8aA579899513C01';
 
 const AuthContext = createContext();
 
@@ -23,7 +24,8 @@ export const useAuthClient = () => {
   const initializeContracts = (signerInstance) => {
     const loanContract = new ethers.Contract(loanContractAddress, loanABI, signerInstance);
     const tokenContract = new ethers.Contract(tokenContractAddress, tokenABI, signerInstance);
-    setContracts({ loan: loanContract, token: tokenContract });
+    const loanNFTContract = new ethers.Contract(loanNFTContractAddress, loanNFTABI, signerInstance);
+    setContracts({ loan: loanContract, token: tokenContract, loanNFT: loanNFTContract});
   };
 
   // Create WalletConnect provider
@@ -204,45 +206,38 @@ export const useAuthClient = () => {
   };
 
   // Check if user is admin
-  const checkIfAdmin = (userAddress) => {
+  const checkIfAdmin = async (userAddress) => {
     if (!userAddress) return false;
-    const normalizedUserAddress = userAddress.toLowerCase();
-    const normalizedAdminAddresses = ADMIN_ADDRESSES.map((addr) => addr.toLowerCase());
-    return normalizedAdminAddresses.includes(normalizedUserAddress);
+    try {
+      const admins = await getAdmins();
+  
+      const normalizedUserAddress = userAddress.toLowerCase();
+      const normalizedAdminAddresses = admins.map((addr) => addr.toLowerCase());
+  
+      return normalizedAdminAddresses.includes(normalizedUserAddress);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      return false;
+    }
   };
 
   // Loan contract functions
   const addCollateral = async (stockName, quantity) => {
-    try {
-      const tx = await contracts.loan
-        .addCollateral(stockName, quantity);
-      await tx.wait();
-      console.log("Collateral added successfully", tx);
-    } catch (error) {
-      console.error("Error adding collateral:", error);
-    }
+    const tx = await contracts.loan
+      .addCollateral(stockName, quantity);
+    await tx.wait();
   };
 
   const updateCollateralStatus = async (collateralId, status) => {
-    try {
-      const tx = await contracts.loan
-        .updateCollateralStatus(collateralId, status);
-      await tx.wait();
-      console.log("Collateral status updated successfully", tx);
-    } catch (error) {
-      console.error("Error updating collateral status:", error);
-    }
+    const tx = await contracts.loan
+      .updateCollateralStatus(collateralId, status);
+    await tx.wait();
   };
 
   const offerLoan = async (collateralId, interestRate, loanAmount, duration) => {
-    try {
-      const tx = await contracts.loan
-        .offerLoan(collateralId, interestRate, loanAmount, duration);
-      await tx.wait();
-      console.log("Loan offered successfully", tx);
-    } catch (error) {
-      console.error("Error offering loan:", error);
-    }
+    const tx = await contracts.loan
+      .offerLoan(collateralId, interestRate, loanAmount, duration);
+    await tx.wait();
   };
 
   const acceptLoan = async (loanId) => {
@@ -257,14 +252,9 @@ export const useAuthClient = () => {
   };
 
   const cancelLoan = async (loanId) => {
-    try {
-      const tx = await contracts.loan
-        .cancelLoan(loanId);
-      await tx.wait();
-      console.log("Loan canceled successfully", tx);
-    } catch (error) {
-      console.error("Error canceling loan:", error);
-    }
+    const tx = await contracts.loan
+      .cancelLoan(loanId);
+    await tx.wait();
   };
 
   const addAdmin = async (newAdmin) => {

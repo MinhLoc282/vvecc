@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../../hooks/use-auth-client';
 import { BigNumber } from 'ethers';
+import { toast } from 'react-toastify';
 
 const LoanMarketplacePage = () => {
   const { getAcceptedCollaterals, offerLoan, contracts, account } = useAuth();
@@ -56,19 +57,21 @@ const LoanMarketplacePage = () => {
         try {
           const collaterals = await getAcceptedCollaterals();
 
-          const formattedCollaterals = collaterals.map((collateral, index) => ({
-              id: index + 1,
-              owner: collateral[0],
-              stockName: collateral[1],
-              quantity: BigNumber.from(collateral[2]).toNumber(),
-              status: collateral[3] === 0 
-              ? "Pending" 
-              : collateral[3] === 1 
-              ? "Approved" 
-              : collateral[3] === 2 
-              ? "Declined" 
-              : "Cancelled",    
-            }));
+          const formattedCollaterals = collaterals.map((collateral) => ({
+            id: BigNumber.from(collateral[0]).toNumber(),
+            owner: collateral[1],
+            stockName: collateral[2],
+            quantity: BigNumber.from(collateral[3]).toNumber(),
+            status: collateral[4] === 0 
+                ? "Pending" 
+                : collateral[4] === 1 
+                ? "Approved" 
+                : collateral[4] === 2 
+                ? "Declined" 
+                : "Cancelled",
+            acceptedLoanId: BigNumber.from(collateral[5]).toNumber(),
+          }))
+          .filter((collateral) => collateral.owner.toLowerCase() !== account.toLowerCase());
           setAcceptedCollaterals(formattedCollaterals);
         } catch (error) {
           console.error('Error fetching accepted collaterals:', error);
@@ -118,11 +121,14 @@ const LoanMarketplacePage = () => {
       setLoadingSubmit(true);
       try {
         await offerLoan(selectedCollateral.id, interestRate * 100, BigNumber.from(loanAmount).mul(BigNumber.from("1000000000000000000")), duration);
-        handleCloseModal();
+        toast.success('Offer loan successfully!');
       } catch (error) {
         console.error('Error submitting loan request:', error);
+        toast.error('Failed to offer loan.');
+      } finally {
+        setLoadingSubmit(false);
+        handleCloseModal();
       }
-      setLoadingSubmit(false);
     }
   };
 
