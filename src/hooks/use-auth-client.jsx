@@ -78,7 +78,6 @@ export const useAuthClient = () => {
         
         // Check network
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        console.log(chainId);
         if (parseInt(chainId, 16) !== 97) {
           // Ask user to switch to BSC Testnet
           try {

@@ -71,7 +71,8 @@ const LoanMarketplacePage = () => {
                 : "Cancelled",
             acceptedLoanId: BigNumber.from(collateral[5]).toNumber(),
           }))
-          .filter((collateral) => collateral.owner.toLowerCase() !== account.toLowerCase());
+          .filter((collateral) => collateral.owner.toLowerCase() !== account.toLowerCase() && 
+          collateral.acceptedLoanId === 0);
           setAcceptedCollaterals(formattedCollaterals);
         } catch (error) {
           console.error('Error fetching accepted collaterals:', error);
