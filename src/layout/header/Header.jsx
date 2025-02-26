@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth-client';
 import LoggedIn from '../../components/LoggedStatus/LoggedIn';
@@ -44,8 +44,12 @@ function LoginButton() {
 }
 
 function Header() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    login();
+  }, []);
 
   return (
     <div className={styles.AuthSection}>

@@ -1,10 +1,11 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { ethers } from 'ethers';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import loanABI from '../constants/loan_abi.json'
 import loanNFTABI from '../constants/loan_nft_abi.json'
 import tokenABI from '../constants/token_abi.json'
+import { toast } from 'react-toastify';
 const loanContractAddress = '0x09D835741ad7c0eB86A1687B754154E3A9c3Ec85';
 const tokenContractAddress = '0x69dF8a0E5B51A0122f1e7A34Ce762FB38e354Bfe';
 const loanNFTContractAddress = '0xC05Ec1C0f47D066d207150C8A8aA579899513C01';
@@ -77,6 +78,7 @@ export const useAuthClient = () => {
         
         // Check network
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        console.log(chainId);
         if (parseInt(chainId, 16) !== 97) {
           // Ask user to switch to BSC Testnet
           try {
@@ -208,8 +210,11 @@ export const useAuthClient = () => {
   // Check if user is admin
   const checkIfAdmin = async (userAddress) => {
     if (!userAddress) return false;
+    if (!contracts.loan) return false;
+    
     try {
       const admins = await getAdmins();
+      if (!admins || !Array.isArray(admins)) return false;
   
       const normalizedUserAddress = userAddress.toLowerCase();
       const normalizedAdminAddresses = admins.map((addr) => addr.toLowerCase());
@@ -281,12 +286,14 @@ export const useAuthClient = () => {
 
   const getAdmins = async () => {
     try {
+      if (!contracts.loan) return [];
       const admins = await contracts.loan.getAdmins();
       return admins;
     } catch (error) {
       console.error("Error fetching admins:", error);
+      return [];
     }
-  };  
+  };
 
   const getUserCollaterals = async (userAddress) => {
     try {
@@ -327,6 +334,45 @@ export const useAuthClient = () => {
       console.error("Error fetching active loans:", error);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ethereum !== undefined) {
+      const handleAccountsChanged = (accounts) => {
+        if (accounts.length === 0) {
+          setAccount(null);
+          toast.error('No accounts connected to the site');
+        } else {
+          setAccount(accounts[0]);
+          toast.success(`Connected to account: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`);
+        }
+      };
+
+      const handleChainChanged = (newChainId) => {
+        const parsedChainId = parseInt(newChainId, 16);
+        // setChainId(parsedChainId);
+        toast.info(`Network Changed to Chain Id: ${parsedChainId}`, { toastId: 'changeChainId' });
+      };
+
+      const handleDisconnect = (error) => {
+        console.log("Disconnect event:", error);
+        setAccount(null);
+        setIsAuthenticated(false);
+        toast.error('Wallet disconnected');
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+      window.ethereum.on('disconnect', handleDisconnect);
+
+      return () => {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+        window.ethereum.removeListener('disconnect', handleDisconnect);
+      };
+    } else {
+      toast.error('Metamask is not installed', { toastId: 'metamask-missing' });
+    }
+  }, []);
 
   return {
     isAuthenticated,

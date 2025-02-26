@@ -74,11 +74,6 @@ function LoggedIn() {
           <strong>Address:</strong>
           <span className={styles.AccountID}>{account}</span>
         </div>
-
-        <div className={styles.TextConainer}>
-          <strong>Network:</strong>
-          <span>{contracts?.swapActor?._network?.name || 'Unknown'}</span>
-        </div>
         
         <button type="button" id="logout" onClick={logout}>
           Disconnect
