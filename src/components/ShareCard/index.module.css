@@ -1,0 +1,85 @@
+.shareCard {
+  border-radius: 8px;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+}
+.shareCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.title {
+  letter-spacing: -0.025em;
+  font-weight: 500;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: hsl(var(--primary));
+}
+.public {
+  color: rgb(22 101 52 / var(--tw-text-opacity, 1));
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
+  border-radius: 0.25rem;
+  padding: 2px 10px;
+}
+.private {
+  color: rgb(30 64 175 / var(--tw-text-opacity, 1));
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
+  border-radius: 0.25rem;
+  padding: 2px 10px;
+}
+.companyName {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.shareInfo {
+  padding-top: 12px;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+
+  .info {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    span {
+      color: hsl(var(--muted-foreground));
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      font-weight: 600;
+    }
+  }
+}
+.placeBid {
+    margin-top: 24px;
+    color: hsl(var(--primary-foreground));
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 8px 16px;
+    background-color: #2563eb;
+    border-radius: calc(var(--radius) - 2px);
+    white-space: nowrap;
+    width: 100%;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}

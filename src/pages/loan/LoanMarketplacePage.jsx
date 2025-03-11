@@ -134,10 +134,10 @@ const LoanMarketplacePage = () => {
   };
 
   return (
-    <Box sx={{ padding: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Typography variant="h4" color="primary" sx={{ color: 'rgb(0, 50, 99)', marginBottom: 3 }}>
+    <Box sx={{ backgroundColor: 'hsl(var(--background))', minHeight: '100vh' }}>
+      {/* <Typography variant="h4" color="primary" sx={{ color: 'rgb(0, 50, 99)', marginBottom: 3 }}>
         Loan Marketplace
-      </Typography>
+      </Typography> */}
       <TableContainer component={Paper} sx={{ backgroundColor: 'white' }}>
         <Table>
           <TableHead>

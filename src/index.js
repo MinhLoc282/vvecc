@@ -1,16 +1,17 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
+import React from "react";
+import { createRoot } from "react-dom/client";
 
-import App from './App/App';
-import Notification from './components/Notification/Notification';
+import App from "./App/App";
+import Modal from "react-modal"
+import Notification from "./components/Notification/Notification";
 
-import './index.css';
-
-const root = createRoot(document.getElementById('root'));
+import "./index.css";
+Modal.setAppElement('#root');
+const root = createRoot(document.getElementById("root"));
 
 root.render(
   <React.StrictMode>
     <App />
     <Notification />
-  </React.StrictMode>,
+  </React.StrictMode>
 );

@@ -1,24 +1,21 @@
-import React from 'react';
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { RecoilRoot } from "recoil";
+import { AuthProvider } from "../hooks/use-auth-client";
 
-import { AuthProvider } from '../hooks/use-auth-client';
+import { LOCATION } from "../constants";
 
-import { LOCATION } from '../constants';
-
-import Layout from '../layout/Layout';
-import ProtectedRoute from '../components/ProtectedRoute/ProtectedRoute';
+import Layout from "../layout/Layout";
+import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
 // New Pages
-import MyCollateralPage from '../pages/collateral/MyCollateralPage';
-import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
-import LoanMarketplacePage from '../pages/loan/LoanMarketplacePage';
-import MyLoansPage from '../pages/loan/MyLoansPage';
-import LoanDetailsPage from '../pages/loan/LoanDetailsPage';
-import AdminUserManagementPage from '../pages/admin/AdminUserManagementPage';
+import MyCollateralPage from "../pages/collateral/MyCollateralPage";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import LoanMarketplacePage from "../pages/loan/LoanMarketplacePage";
+import MyLoansPage from "../pages/loan/MyLoansPage";
+import LoanDetailsPage from "../pages/loan/LoanDetailsPage";
+import AdminUserManagementPage from "../pages/admin/AdminUserManagementPage";
+import { DashboardPage } from "../pages/dashboard/DashboardPage";
+import { MarketPlacePage } from "../pages/marketplace/MarketPlacePage";
 
 function App() {
   return (
@@ -26,9 +23,18 @@ function App() {
       <Routes>
         <Route
           path="/"
-          element={<Navigate to={LOCATION.LOAN_MARKETPLACE} replace />}
+          element={<Navigate to={LOCATION.USER_DASHBOARD} replace />}
         />
 
+        <Route path={LOCATION.USER_DASHBOARD} element={<Layout />}>
+          <Route index element={<DashboardPage />} />
+        </Route>
+        {/* <Route path={LOCATION.LOAN_MARKETPLACE} element={<Layout />}>
+          <Route index element={<LoanMarketplacePage />} />
+        </Route> */}
+        <Route path={LOCATION.LOAN_MARKETPLACE} element={<Layout />}>
+          <Route index element={<MarketPlacePage />} />
+        </Route>
         {/* My Collateral Page */}
         <Route path={LOCATION.MY_COLLATERAL} element={<Layout />}>
           <Route index element={<MyCollateralPage />} />
@@ -79,8 +85,10 @@ function App() {
 
 export default function MyApp() {
   return (
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <RecoilRoot>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </RecoilRoot>
   );
 }

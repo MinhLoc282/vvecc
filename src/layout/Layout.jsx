@@ -1,17 +1,22 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
 
-import Header from './header/Header';
+import Header from "./header/Header";
 
-import styles from './index.module.css';
+import styles from "./index.module.css";
+import Navbar from "./navbar/Navbar";
 
 function Layout() {
+  const [openMenu, setOpenMenu] = useState(false);
+
+
   return (
     <div>
-      <Header />
+      {/* <Header /> */}
+      <Navbar />
 
       <div className={styles.Outlet}>
-        <Outlet />
+        <Outlet  />
       </div>
     </div>
   );

@@ -5,5 +5,7 @@ export const LOCATION = {
   LOAN_MARKETPLACE: '/loan-marketplace',
   MY_LOANS: '/my-loans',
   LOAN_DETAILS: '/loan-details',
+  USER_DASHBOARD: '/dashboard',
+
   ADMIN_USER_MANAGEMENT: '/admin-user-management',
 };

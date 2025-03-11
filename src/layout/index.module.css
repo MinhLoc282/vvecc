@@ -1,3 +1,4 @@
 .Outlet {
-  margin-top: 62px;
+  margin-top: 0px;
+  background: hsl(var(--background));
 }

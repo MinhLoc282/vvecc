@@ -73,7 +73,7 @@ const MyLoansPage = () => {
     }
   };
 
-  const filteredCollateralOffers = collateralOffers.filter(
+  const filteredCollateralOffers = collateralOffers?.filter(
     (offer) => offer.accepted || (offer.accepted === false && BigNumber.from(offer.acceptedLoanId).toNumber() === 0)
   );
 
