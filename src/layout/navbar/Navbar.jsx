@@ -31,12 +31,16 @@ export default function Navbar() {
             <Link to="/loan-marketplace" className={styles.navItem}>
               Marketplace
             </Link>
-            <Link to="/my-collateral" className={styles.navItem}>
+            {/* <Link to="/my-collateral" className={styles.navItem}>
               My Collateral
             </Link>
             <Link to="/my-loans" className={styles.navItem}>
               My Loans
+            </Link> */}
+            <Link to="/my-loan" className={styles.navItem}>
+              My Loans
             </Link>
+            
             {isAdmin && (
               <Link to={"/admin-dashboard"} className={styles.navItem}>
                 Admin Dashboard

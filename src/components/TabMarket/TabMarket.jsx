@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styles from "./index.module.css";
 import LoanMarketplacePage from "../../pages/loan/LoanMarketplacePage";
+import MarketPlace from "../MarketPlace/MarketPlace";
 export const TabMarket = () => {
   const tabs = [
     { id: "Active", label: "Active Listings" },
@@ -24,7 +25,8 @@ export const TabMarket = () => {
         ))}
       </div>
       <div className={styles.wrapContent}>
-        <LoanMarketplacePage />
+        {activeTab === "Bid" && <MarketPlace />}
+        {/* <LoanMarketplacePage /> */}
       </div>
     </div>
   );

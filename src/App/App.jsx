@@ -16,6 +16,8 @@ import LoanDetailsPage from "../pages/loan/LoanDetailsPage";
 import AdminUserManagementPage from "../pages/admin/AdminUserManagementPage";
 import { DashboardPage } from "../pages/dashboard/DashboardPage";
 import { MarketPlacePage } from "../pages/marketplace/MarketPlacePage";
+import { MyLoanPage } from "../pages/myloan/MyLoanPage";
+import { AdminDashboard } from "../pages/AdminDashboard/AdminDashboard";
 
 function App() {
   return (
@@ -51,6 +53,16 @@ function App() {
         >
           <Route index element={<AdminDashboardPage />} />
         </Route>
+        {/* <Route
+          path={LOCATION.ADMIN_DASHBOARD}
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+        </Route> */}
 
         {/* Loan Marketplace Page */}
         <Route path={LOCATION.LOAN_MARKETPLACE} element={<Layout />}>
@@ -60,6 +72,10 @@ function App() {
         {/* My Loans Page */}
         <Route path={LOCATION.MY_LOANS} element={<Layout />}>
           <Route index element={<MyLoansPage />} />
+        </Route>
+
+        <Route path={LOCATION.MY_LOAN} element={<Layout />}>
+          <Route index element={<MyLoanPage/>} />
         </Route>
 
         {/* Loan Details Page */}
