@@ -22,6 +22,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import { AvailableTable } from "../../components/AvailableTable/AvailableTable";
 import { ActiveTable } from "../../components/ActiveTable/ActiveTable";
+import { BigNumber } from 'ethers';
 
 export const MyLoanPage = () => {
   const tabs = [
