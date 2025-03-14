@@ -1,5 +1,7 @@
 .loanContainer {
   overflow-x: auto; /* Hỗ trợ cuộn ngang */
+  margin-top: 20px;
+  width: 100%;
 }
 
 .loanTable {
@@ -43,6 +45,43 @@
 
 .loanButton:hover {
   background-color: #1a4e89;
+}
+
+.noData {
+  text-align: center;
+  color: #757575;
+  padding: 24px;
+}
+
+.actionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actionButton {
+  min-width: 100px;
+  text-transform: none;
+}
+
+.paymentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paymentInfo p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.overdue {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.overdueRow {
+  background-color: #ffebee;
 }
 
 /* Đảm bảo bảng cuộn ngang khi màn hình nhỏ */

@@ -108,7 +108,7 @@ const MyLoansPage = () => {
                   <TableCell>{offer.stockName}</TableCell>
                   <TableCell>{offer.quantity?.toString()}</TableCell>
                   <TableCell>{offer.lender}</TableCell>
-                  <TableCell>{BigNumber.from(offer.interestRate).div(100).toString()}%</TableCell>
+                  <TableCell>{((BigNumber.from(offer.interestRate).toNumber()) / 100).toString()}%</TableCell>
                   <TableCell>${ethers.utils?.formatUnits(offer.loanAmount, 18)}</TableCell>
                   <TableCell>{offer.duration?.toString()} months</TableCell>
                   <TableCell>
@@ -147,7 +147,7 @@ const MyLoansPage = () => {
                   <TableCell>{loan.stockName}</TableCell>
                   <TableCell>{loan.quantity?.toString()}</TableCell>
                   <TableCell>{loan.collateralOwner}</TableCell>
-                  <TableCell>{BigNumber.from(loan.interestRate).div(100).toString()}%</TableCell>
+                  <TableCell>{((BigNumber.from(loan.interestRate).toNumber()) / 100).toString()}%</TableCell>
                   <TableCell>${ethers.utils?.formatUnits(loan.loanAmount, 18)}</TableCell>
                   <TableCell>{loan.duration?.toString()} months</TableCell>
                   <TableCell>

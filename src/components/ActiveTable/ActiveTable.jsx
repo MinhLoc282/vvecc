@@ -86,6 +86,7 @@ export const ActiveTable = () => {
       (offer.accepted === false &&
         BigNumber.from(offer.acceptedLoanId).toNumber() === 0)
   );
+
   return (
     <div className={styles.loanContainer}>
       <table className={styles.loanTable}>
@@ -114,7 +115,7 @@ export const ActiveTable = () => {
                 <td>{loan.quantity?.toString()}</td>
                 <td>{loan.collateralOwner}</td>
                 <td>
-                  {BigNumber.from(loan.interestRate).div(100).toString()}%
+                  {((BigNumber.from(loan.interestRate).toNumber()) / 100).toString()}%
                 </td>
                 <td>
                   ${ethers.utils?.formatUnits(loan.loanAmount, 18)}

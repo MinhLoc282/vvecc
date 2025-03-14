@@ -79,6 +79,37 @@
 				"internalType": "address",
 				"name": "borrower",
 				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "InterestPaid",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "borrower",
+				"type": "address"
 			}
 		],
 		"name": "LoanAccepted",
@@ -144,6 +175,37 @@
 			}
 		],
 		"name": "LoanOffered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "borrower",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "nftOwner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "LoanRepaid",
 		"type": "event"
 	},
 	{
@@ -374,14 +436,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "acceptedLoanId",
-						"type": "uint256"
-					},
-					{
 						"internalType": "enum CollateralLoan.CollateralStatus",
 						"name": "collateralStatus",
 						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "acceptedLoanId",
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct CollateralLoan.LoanWithCollateral[]",
@@ -409,7 +471,7 @@
 		"inputs": [
 			{
 				"internalType": "enum CollateralLoan.CollateralStatus",
-				"name": "status",
+				"name": "_status",
 				"type": "uint8"
 			}
 		],
@@ -451,6 +513,40 @@
 				"internalType": "struct CollateralLoan.Collateral[]",
 				"name": "",
 				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "getLoanPaymentStatus",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "lastPayment",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "nextPaymentDue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isOverdue",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -519,19 +615,38 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "acceptedLoanId",
-						"type": "uint256"
-					},
-					{
 						"internalType": "enum CollateralLoan.CollateralStatus",
 						"name": "collateralStatus",
 						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "acceptedLoanId",
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct CollateralLoan.LoanWithCollateral[]",
 				"name": "",
 				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "getNextInterestPaymentDate",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -589,6 +704,25 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "lastInterestPayment",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "loanCounter",
 		"outputs": [
@@ -606,9 +740,28 @@
 		"name": "loanNFT",
 		"outputs": [
 			{
-				"internalType": "contract LoanNFT",
+				"internalType": "contract ILoanNFT",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "loanStartTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -694,6 +847,19 @@
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "payInterest",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_admin",
 				"type": "address"
@@ -702,6 +868,38 @@
 		"name": "removeAdmin",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "repayLoan",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "totalPaidAmount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{

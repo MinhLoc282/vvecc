@@ -36,20 +36,19 @@ export const AdminDashboard = () => {
         try {
           const collaterals = await getPendingCollaterals();
           const formattedCollaterals = collaterals.map((collateral) => ({
-            id: BigNumber.from(collateral[0]).toNumber(),
-            owner: collateral[1],
-            stockName: collateral[2],
-            quantity: BigNumber.from(collateral[3]).toNumber(),
-            status:
-              collateral[4] === 0
-                ? "Pending"
-                : collateral[4] === 1
-                ? "Approved"
-                : collateral[4] === 2
-                ? "Declined"
+            id: BigNumber.from(collateral.collateralId).toNumber(),
+            owner: collateral.owner,
+            stockName: collateral.stockName,
+            quantity: BigNumber.from(collateral.quantity).toNumber(),
+            status: collateral.status === 0 
+                ? "Pending" 
+                : collateral.status === 1 
+                ? "Approved" 
+                : collateral.status === 2 
+                ? "Declined" 
                 : "Cancelled",
-            acceptedLoanId: BigNumber.from(collateral[5]).toNumber(),
-          }));
+            acceptedLoanId: BigNumber.from(collateral.acceptedLoanId).toNumber(),
+          }))
           setCollateralRequests(formattedCollaterals);
         } catch (error) {
           console.error("Error fetching pending collaterals:", error);

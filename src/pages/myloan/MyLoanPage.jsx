@@ -21,14 +21,13 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { AvailableTable } from "../../components/AvailableTable/AvailableTable";
-import { ActiveTable } from "../../components/ActiveTable/ActiveTable";
 import { BigNumber } from 'ethers';
+import { toast } from "react-toastify";
 
 export const MyLoanPage = () => {
   const tabs = [
     { id: "Collateral", label: "My Collateral" },
     { id: "Available", label: "Available Collateral Offers" },
-    { id: "Active", label: "My Active Loans" },
   ];
   const { getUserCollaterals, addCollateral, updateCollateralStatus, account } =
     useAuth();
@@ -37,7 +36,7 @@ export const MyLoanPage = () => {
   const [stockName, setStockName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("Active");
+  const [activeTab, setActiveTab] = useState("Collateral");
 
   const fetchCollaterals = async () => {
     try {
@@ -45,20 +44,19 @@ export const MyLoanPage = () => {
       const userCollaterals = await getUserCollaterals(account);
 
       const formattedCollaterals = userCollaterals.map((collateral) => ({
-        id: BigNumber.from(collateral[0]).toNumber(),
-        owner: collateral[1],
-        stockName: collateral[2],
-        quantity: BigNumber.from(collateral[3]).toNumber(),
-        status:
-          collateral[4] === 0
-            ? "Pending"
-            : collateral[4] === 1
-            ? "Approved"
-            : collateral[4] === 2
-            ? "Declined"
+        id: BigNumber.from(collateral.collateralId).toNumber(),
+        owner: collateral.owner,
+        stockName: collateral.stockName,
+        quantity: BigNumber.from(collateral.quantity).toNumber(),
+        status: collateral.status === 0 
+            ? "Pending" 
+            : collateral.status === 1 
+            ? "Approved" 
+            : collateral.status === 2 
+            ? "Declined" 
             : "Cancelled",
-        acceptedLoanId: BigNumber.from(collateral[5]).toNumber(),
-      }));
+        acceptedLoanId: BigNumber.from(collateral.acceptedLoanId).toNumber(),
+      }))
       setCollaterals(formattedCollaterals);
     } catch (error) {
       console.error("Error fetching collaterals:", error);
@@ -117,7 +115,7 @@ export const MyLoanPage = () => {
       <div className={styles.container}>
         <div className={styles.wrapFirstContent}>
           <div className={styles.content}>
-            <h1 className={styles.title}>Loan Marketplace</h1>
+            <h1 className={styles.title}>My Loan</h1>
           </div>
           <div className={styles.primaryButton} onClick={handleOpenModal}>
             <AddIcon /> Add Collateral
@@ -338,8 +336,6 @@ export const MyLoanPage = () => {
               )}
 
               {activeTab == "Available" && <AvailableTable />}
-              {activeTab == "Active" && <ActiveTable />}
-
             </div>
           </div>
         </div>
