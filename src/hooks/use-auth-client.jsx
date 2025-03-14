@@ -4,13 +4,13 @@ import { ethers } from 'ethers';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import loanABI from '../constants/loan_abi.json'
 import loanNFTABI from '../constants/loan_nft_abi.json'
-import loanNFTMarketplaceABI from '../constants/loan_nft_abi.json'
+import loanNFTMarketplaceABI from '../constants/loan_nft_marketplace_abi.json'
 import tokenABI from '../constants/token_abi.json'
 import { toast } from 'react-toastify';
-const loanContractAddress = '0x8E055A629327498a82Cd0Bf06E9144428D3e4f33';
+const loanContractAddress = '0x5752fE4884eEE4a92018D2EF4426BB817aEC05Be';
 const tokenContractAddress = '0x69dF8a0E5B51A0122f1e7A34Ce762FB38e354Bfe';
-const loanNFTContractAddress = '0x46612F9eAC1f920375b921378164Bc48938cCd61';
-const loanNFTMarketplaceContractAddress = '0xa5De4a6E6c6CADbD1B667F9383E31069dFdEbfcF';
+const loanNFTContractAddress = '0x1D815241E20FcCFd55099F060E83767248934dd8';
+const loanNFTMarketplaceContractAddress = '0xBE80b01728e51e0dA78f644918d05CB4BEb729Cf';
 
 const AuthContext = createContext();
 

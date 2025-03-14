@@ -160,3 +160,44 @@
   height: 100%;
   padding: 24px;
 }
+
+.navItem {
+  position: relative;
+  padding-bottom: 5px; /* Give some space for the highlight */
+  transition: color 0.3s ease;
+}
+
+.activeNavItem {
+  color: var(--highlight-color, #1a73e8); /* Default highlight color if variable not defined */
+  font-weight: 500;
+}
+
+.activeNavItem::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--highlight-color, #1a73e8);
+  border-radius: 1.5px;
+  transition: transform 0.3s ease;
+}
+
+/* Optional: Add hover effect for non-active items */
+.navItem:not(.activeNavItem):hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--hover-color, #dadce0);
+  border-radius: 1.5px;
+  transform: scaleX(0.5);
+  transition: transform 0.3s ease;
+}
+
+.navItem:not(.activeNavItem):hover::after {
+  transform: scaleX(1);
+}

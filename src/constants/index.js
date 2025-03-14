@@ -3,6 +3,7 @@ export const LOCATION = {
   MY_COLLATERAL: '/my-collateral',
   ADMIN_DASHBOARD: '/admin-dashboard',
   LOAN_MARKETPLACE: '/loan-marketplace',
+  NFT_MARKETPLACE: '/nft-marketplace',
   MY_LOANS: '/my-loans',
   LOAN_DETAILS: '/loan-details',
   USER_DASHBOARD: '/dashboard',

@@ -18,6 +18,7 @@ import { DashboardPage } from "../pages/dashboard/DashboardPage";
 import { MarketPlacePage } from "../pages/marketplace/MarketPlacePage";
 import { MyLoanPage } from "../pages/myloan/MyLoanPage";
 import { AdminDashboard } from "../pages/AdminDashboard/AdminDashboard";
+import { LoanNFTMarketplacePage } from "../pages/marketplace/NFTMarketPlacePage";
 
 function App() {
   return (
@@ -36,6 +37,9 @@ function App() {
         </Route> */}
         <Route path={LOCATION.LOAN_MARKETPLACE} element={<Layout />}>
           <Route index element={<MarketPlacePage />} />
+        </Route>
+        <Route path={LOCATION.NFT_MARKETPLACE} element={<Layout />}>
+          <Route index element={<LoanNFTMarketplacePage />} />
         </Route>
         {/* My Collateral Page */}
         <Route path={LOCATION.MY_COLLATERAL} element={<Layout />}>

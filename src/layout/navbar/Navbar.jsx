@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useOutletContext, useLocation } from "react-router-dom";
 import Logo from "../../assets/logo.png";
 import { useAuth } from "../../hooks/use-auth-client";
 
@@ -10,11 +10,16 @@ import { Logout } from "../../components/Logout/Logout";
 export default function Navbar() {
   const { isAuthenticated, login, isAdmin, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     login();
     logout();
   }, []);
+
+  const isActiveLink = (path) => {
+    return location.pathname === path;
+  };
 
   return (
     <div className={styles.navbar}>
@@ -25,31 +30,27 @@ export default function Navbar() {
           </Link>
 
           <nav className={styles.navLinks}>
-            <Link to="/" className={styles.navItem}>
+            <Link to="/dashboard" className={`${styles.navItem} ${isActiveLink('/dashboard') ? styles.activeNavItem : ''}`}>
               Dashboard
             </Link>
-            <Link to="/loan-marketplace" className={styles.navItem}>
+            <Link to="/loan-marketplace" className={`${styles.navItem} ${isActiveLink('/loan-marketplace') ? styles.activeNavItem : ''}`}>
               Marketplace
             </Link>
-            {/* <Link to="/my-collateral" className={styles.navItem}>
-              My Collateral
+            <Link to="/nft-marketplace" className={`${styles.navItem} ${isActiveLink('/nft-marketplace') ? styles.activeNavItem : ''}`}>
+              NFT Marketplace
             </Link>
-            <Link to="/my-loans" className={styles.navItem}>
-              My Loans
-            </Link> */}
-            <Link to="/my-loan" className={styles.navItem}>
+            <Link to="/my-loan" className={`${styles.navItem} ${isActiveLink('/my-loan') ? styles.activeNavItem : ''}`}>
               My Loans
             </Link>
             
             {isAdmin && (
-              <Link to={"/admin-dashboard"} className={styles.navItem}>
+              <Link to="/admin-dashboard" className={`${styles.navItem} ${isActiveLink('/admin-dashboard') ? styles.activeNavItem : ''}`}>
                 Admin Dashboard
               </Link>
             )}
 
-            {/* Admin User Management (Only visible to the owner) */}
             {isAdmin && (
-              <Link to={"/admin-user-management"} className={styles.navItem}>
+              <Link to="/admin-user-management" className={`${styles.navItem} ${isActiveLink('/admin-user-management') ? styles.activeNavItem : ''}`}>
                 Admin Management
               </Link>
             )}
