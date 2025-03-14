@@ -79,6 +79,43 @@
 				"internalType": "address",
 				"name": "borrower",
 				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "months",
+				"type": "uint256"
+			}
+		],
+		"name": "InterestPaid",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "borrower",
+				"type": "address"
 			}
 		],
 		"name": "LoanAccepted",
@@ -144,6 +181,56 @@
 			}
 		],
 		"name": "LoanOffered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "borrower",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "nftOwner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "LoanRepaid",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "loanId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "enum CollateralLoan.LoanStatus",
+				"name": "status",
+				"type": "uint8"
+			}
+		],
+		"name": "LoanStatusUpdated",
 		"type": "event"
 	},
 	{
@@ -359,6 +446,26 @@
 						"type": "bool"
 					},
 					{
+						"internalType": "enum CollateralLoan.LoanStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nextInterestDue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interestPaidMonths",
+						"type": "uint256"
+					},
+					{
 						"internalType": "address",
 						"name": "collateralOwner",
 						"type": "address"
@@ -374,14 +481,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "acceptedLoanId",
-						"type": "uint256"
-					},
-					{
 						"internalType": "enum CollateralLoan.CollateralStatus",
 						"name": "collateralStatus",
 						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "acceptedLoanId",
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct CollateralLoan.LoanWithCollateral[]",
@@ -408,8 +515,109 @@
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "_borrower",
+				"type": "address"
+			}
+		],
+		"name": "getBorrowerLoanHistory",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "loanId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "lender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "collateralId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interestRate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "loanAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "duration",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "accepted",
+						"type": "bool"
+					},
+					{
+						"internalType": "enum CollateralLoan.LoanStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nextInterestDue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interestPaidMonths",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "collateralOwner",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "stockName",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "quantity",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum CollateralLoan.CollateralStatus",
+						"name": "collateralStatus",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "acceptedLoanId",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct CollateralLoan.LoanWithCollateral[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "enum CollateralLoan.CollateralStatus",
-				"name": "status",
+				"name": "_status",
 				"type": "uint8"
 			}
 		],
@@ -449,6 +657,161 @@
 					}
 				],
 				"internalType": "struct CollateralLoan.Collateral[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "getLoanStatus",
+		"outputs": [
+			{
+				"internalType": "enum CollateralLoan.LoanStatus",
+				"name": "status",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "nextInterestDue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "interestPaidMonths",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "remainingMonths",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalRemainingInterest",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalRemainingPayment",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isOverdue",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "enum CollateralLoan.LoanStatus",
+				"name": "_status",
+				"type": "uint8"
+			}
+		],
+		"name": "getLoansByStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "loanId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "lender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "collateralId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interestRate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "loanAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "duration",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "accepted",
+						"type": "bool"
+					},
+					{
+						"internalType": "enum CollateralLoan.LoanStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nextInterestDue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interestPaidMonths",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "collateralOwner",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "stockName",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "quantity",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum CollateralLoan.CollateralStatus",
+						"name": "collateralStatus",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "acceptedLoanId",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct CollateralLoan.LoanWithCollateral[]",
 				"name": "",
 				"type": "tuple[]"
 			}
@@ -504,6 +867,26 @@
 						"type": "bool"
 					},
 					{
+						"internalType": "enum CollateralLoan.LoanStatus",
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nextInterestDue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "interestPaidMonths",
+						"type": "uint256"
+					},
+					{
 						"internalType": "address",
 						"name": "collateralOwner",
 						"type": "address"
@@ -519,14 +902,14 @@
 						"type": "uint256"
 					},
 					{
-						"internalType": "uint256",
-						"name": "acceptedLoanId",
-						"type": "uint256"
-					},
-					{
 						"internalType": "enum CollateralLoan.CollateralStatus",
 						"name": "collateralStatus",
 						"type": "uint8"
+					},
+					{
+						"internalType": "uint256",
+						"name": "acceptedLoanId",
+						"type": "uint256"
 					}
 				],
 				"internalType": "struct CollateralLoan.LoanWithCollateral[]",
@@ -606,7 +989,7 @@
 		"name": "loanNFT",
 		"outputs": [
 			{
-				"internalType": "contract LoanNFT",
+				"internalType": "contract ILoanNFT",
 				"name": "",
 				"type": "address"
 			}
@@ -658,9 +1041,55 @@
 				"internalType": "bool",
 				"name": "accepted",
 				"type": "bool"
+			},
+			{
+				"internalType": "enum CollateralLoan.LoanStatus",
+				"name": "status",
+				"type": "uint8"
+			},
+			{
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "nextInterestDue",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "interestPaidMonths",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "makeFullPayment",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "markLoanDefaulted",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -694,12 +1123,43 @@
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_months",
+				"type": "uint256"
+			}
+		],
+		"name": "payInterest",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_admin",
 				"type": "address"
 			}
 		],
 		"name": "removeAdmin",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_loanId",
+				"type": "uint256"
+			}
+		],
+		"name": "repayLoan",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"

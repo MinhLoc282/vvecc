@@ -7,8 +7,10 @@ import {
 import { useAuth } from '../../hooks/use-auth-client';
 import { BigNumber } from 'ethers';
 import { toast } from 'react-toastify';
+import styles from "./index.module.css";
 
-const LoanMarketplacePage = () => {
+
+const MarketPlace = () => {
   const { getAcceptedCollaterals, offerLoan, contracts, account } = useAuth();
   const [acceptedCollaterals, setAcceptedCollaterals] = useState([]);
   const [openModal, setOpenModal] = useState(false);
@@ -134,34 +136,33 @@ const LoanMarketplacePage = () => {
   };
 
   return (
-    <Box sx={{ backgroundColor: 'hsl(var(--background))', minHeight: '100vh' }}>
+    <div className={styles.loanContainer}>
       {/* <Typography variant="h4" color="primary" sx={{ color: 'rgb(0, 50, 99)', marginBottom: 3 }}>
         Loan Marketplace
       </Typography> */}
-      <TableContainer component={Paper} sx={{ backgroundColor: 'white' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>Stock Name</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Quantity</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Owner</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+      <table className={styles.loanTable}>
+          <thead>
+            <tr>
+              <th sx={{ fontWeight: 'bold' }}>Stock Name</th>
+              <th sx={{ fontWeight: 'bold' }}>Quantity</th>
+              <th sx={{ fontWeight: 'bold' }}>Owner</th>
+              <th sx={{ fontWeight: 'bold' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
             {acceptedCollaterals.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} align="center">
+              <tr>
+                <td colSpan={4} align="center">
                   No collaterals found.
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ) : (
               acceptedCollaterals.map((collateral) => (
-                <TableRow key={collateral.id}>
-                  <TableCell>{collateral.stockName}</TableCell>
-                  <TableCell>{collateral.quantity}</TableCell>
-                  <TableCell>{collateral.owner}</TableCell>
-                  <TableCell>
+                <tr key={collateral.id}>
+                  <td>{collateral.stockName}</td>
+                  <td>{collateral.quantity}</td>
+                  <td>{collateral.owner}</td>
+                  <td>
                     <Button
                       variant="outlined"
                       sx={{ color: '#236cb2', borderColor: '#236cb2' }}
@@ -169,13 +170,12 @@ const LoanMarketplacePage = () => {
                     >
                       Request Loan
                     </Button>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))
             )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </tbody>
+      </table>
       <Modal open={openModal} onClose={handleCloseModal}>
         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, backgroundColor: 'white', padding: 3, borderRadius: 2, boxShadow: 24 }}>
           <Typography variant="h6">Request Loan for {selectedCollateral?.stockName}</Typography>
@@ -206,8 +206,8 @@ const LoanMarketplacePage = () => {
           </Box>
         </Box>
       </Modal>
-    </Box>
+    </div>
   );
 };
 
-export default LoanMarketplacePage;
+export default MarketPlace;

@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import styles from "./index.module.css";
+import { ArrowUpDown, Check, ChevronDown, Filter, Search } from "lucide-react";
+import useClickOutSide from "../../hooks/useClickOutSide";
+import { TabLoan } from "../../components/TabLoan/TabLoan";
+import { TabMarket } from "../../components/TabMarket/TabMarket";
+import { useAuth } from "../../hooks/use-auth-client";
 import {
   Table,
   TableBody,
@@ -10,14 +16,14 @@ import {
   Button,
   Typography,
   Box,
-  CircularProgress,
+  Modal,
+  TextField,
 } from "@mui/material";
-import { useAuth } from "../../hooks/use-auth-client";
-import { BigNumber } from "ethers";
-import { toast } from "react-toastify";
-import styles from "./index.module.css";
+import AddIcon from "@mui/icons-material/Add";
+import { AvailableTable } from "../../components/AvailableTable/AvailableTable";
+import { ActiveTable } from "../../components/ActiveTable/ActiveTable";
 
-const AdminDashboardPage = () => {
+export const AdminDashboard = () => {
   const { getPendingCollaterals, updateCollateralStatus, contracts } =
     useAuth();
   const [collateralRequests, setCollateralRequests] = useState([]);
@@ -88,13 +94,12 @@ const AdminDashboardPage = () => {
       setLoadingDecline(false);
     }
   };
-
   return (
     <div className={styles.wrapContainer}>
       <div className={styles.container}>
         <div className={styles.wrapFirstContent}>
           <div className={styles.content}>
-            <h1 className={styles.title}> Admin Dashboard</h1>
+            <h1 className={styles.title}>Admin Dashboard</h1>
           </div>
         </div>
 
@@ -110,7 +115,11 @@ const AdminDashboardPage = () => {
                   No pending collaterals
                 </Typography>
               ) : (
-                <div className={styles.loanContainer}>
+                <div
+                  className={styles.loanContainer}
+                  component={Paper}
+                  sx={{ backgroundColor: "white" }}
+                >
                   <table className={styles.loanTable}>
                     <thead>
                       <tr>
@@ -177,5 +186,3 @@ const AdminDashboardPage = () => {
     </div>
   );
 };
-
-export default AdminDashboardPage;

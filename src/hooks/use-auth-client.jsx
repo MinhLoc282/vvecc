@@ -4,11 +4,13 @@ import { ethers } from 'ethers';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
 import loanABI from '../constants/loan_abi.json'
 import loanNFTABI from '../constants/loan_nft_abi.json'
+import loanNFTMarketplaceABI from '../constants/loan_nft_abi.json'
 import tokenABI from '../constants/token_abi.json'
 import { toast } from 'react-toastify';
-const loanContractAddress = '0x09D835741ad7c0eB86A1687B754154E3A9c3Ec85';
+const loanContractAddress = '0x8E055A629327498a82Cd0Bf06E9144428D3e4f33';
 const tokenContractAddress = '0x69dF8a0E5B51A0122f1e7A34Ce762FB38e354Bfe';
-const loanNFTContractAddress = '0xC05Ec1C0f47D066d207150C8A8aA579899513C01';
+const loanNFTContractAddress = '0x46612F9eAC1f920375b921378164Bc48938cCd61';
+const loanNFTMarketplaceContractAddress = '0xa5De4a6E6c6CADbD1B667F9383E31069dFdEbfcF';
 
 const AuthContext = createContext();
 
@@ -26,7 +28,8 @@ export const useAuthClient = () => {
     const loanContract = new ethers.Contract(loanContractAddress, loanABI, signerInstance);
     const tokenContract = new ethers.Contract(tokenContractAddress, tokenABI, signerInstance);
     const loanNFTContract = new ethers.Contract(loanNFTContractAddress, loanNFTABI, signerInstance);
-    setContracts({ loan: loanContract, token: tokenContract, loanNFT: loanNFTContract});
+    const loanNFTMarketplaceContract = new ethers.Contract(loanNFTMarketplaceContractAddress, loanNFTMarketplaceABI, signerInstance);
+    setContracts({ loan: loanContract, token: tokenContract, loanNFT: loanNFTContract,  loanNFTMarketplace: loanNFTMarketplaceContract});
   };
 
   // Create WalletConnect provider
@@ -261,6 +264,16 @@ export const useAuthClient = () => {
     await tx.wait();
   };
 
+  const payInterest = async (loanId) => {
+    const tx = await contracts.loan.payInterest(loanId);
+    await tx.wait();
+  };
+  
+  const repayLoan = async (loanId) => {
+    const tx = await contracts.loan.repayLoan(loanId);
+    await tx.wait();
+  };
+
   const addAdmin = async (newAdmin) => {
     try {
       const tx = await contracts.loan
@@ -387,6 +400,8 @@ export const useAuthClient = () => {
     offerLoan,
     acceptLoan,
     cancelLoan,
+    payInterest,
+    repayLoan,
     addAdmin,
     removeAdmin,
     getAdmins,

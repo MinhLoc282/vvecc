@@ -32,19 +32,19 @@ const MyCollateralPage = () => {
       const userCollaterals = await getUserCollaterals(account);
 
       const formattedCollaterals = userCollaterals.map((collateral) => ({
-        id: BigNumber.from(collateral[0]).toNumber(),
-        owner: collateral[1],
-        stockName: collateral[2],
-        quantity: BigNumber.from(collateral[3]).toNumber(),
-        status: collateral[4] === 0 
+        id: BigNumber.from(collateral.collateralId).toNumber(),
+        owner: collateral.owner,
+        stockName: collateral.stockName,
+        quantity: BigNumber.from(collateral.quantity).toNumber(),
+        status: collateral.status === 0 
             ? "Pending" 
-            : collateral[4] === 1 
+            : collateral.status === 1 
             ? "Approved" 
-            : collateral[4] === 2 
+            : collateral.status === 2 
             ? "Declined" 
             : "Cancelled",
-        acceptedLoanId: BigNumber.from(collateral[5]).toNumber(),
-      }));
+        acceptedLoanId: BigNumber.from(collateral.acceptedLoanId).toNumber(),
+      }))
     setCollaterals(formattedCollaterals);
     } catch (error) {
       console.error("Error fetching collaterals:", error);

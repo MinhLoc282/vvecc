@@ -1,0 +1,57 @@
+.loanContainer {
+  overflow-x: auto; /* Hỗ trợ cuộn ngang */
+}
+
+.loanTable {
+  width: 100%;
+
+  border-collapse: separate; /* Đảm bảo border-radius hoạt động */
+  border-spacing: 0; /* Loại bỏ khoảng trống giữa các ô */
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  table-layout: initial;
+}
+
+.loanTable th,
+.loanTable td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  color: hsl(var(--primary));
+  text-align: left;
+  white-space: nowrap; /* Ngăn ngừa xuống dòng */
+}
+
+.loanTable tr:last-child td {
+  border-bottom: none;
+}
+.loanTable th {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.loanButton {
+  background-color: #236cb2;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s ease;
+}
+
+.loanButton:hover {
+  background-color: #1a4e89;
+}
+
+/* Đảm bảo bảng cuộn ngang khi màn hình nhỏ */
+@media screen and (max-width: 768px) {
+  .loanContainer {
+    overflow-x: auto;
+  }
+
+  .loanTable {
+    display: block;
+    width: max-content;
+  }
+}

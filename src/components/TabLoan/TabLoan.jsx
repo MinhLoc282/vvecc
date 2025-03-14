@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styles from "./index.module.css";
-import { ArrowRight, ArrowUpRight, Briefcase, Share } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Briefcase, LineChart, Share } from "lucide-react";
 import { ShareCard } from "../ShareCard/ShareCard";
 export const TabLoan = () => {
   const tabs = [
@@ -85,7 +85,7 @@ export const TabLoan = () => {
         {activeTab === "loans" && (
           <div className={styles.wrapCol}>
             <div className={styles.wrapIcon}>
-              <Briefcase className={styles.IconBrief} />
+              <LineChart className={styles.IconBrief} />
             </div>
             <h3 className={styles.titleCol}>No Active Loans</h3>
             <p className={styles.contentCol}>

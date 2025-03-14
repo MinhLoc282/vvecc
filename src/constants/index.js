@@ -6,6 +6,7 @@ export const LOCATION = {
   MY_LOANS: '/my-loans',
   LOAN_DETAILS: '/loan-details',
   USER_DASHBOARD: '/dashboard',
+  MY_LOAN: '/my-loan',
 
   ADMIN_USER_MANAGEMENT: '/admin-user-management',
 };
