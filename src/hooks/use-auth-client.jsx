@@ -7,7 +7,7 @@ import loanNFTABI from '../constants/loan_nft_abi.json'
 import loanNFTMarketplaceABI from '../constants/loan_nft_abi.json'
 import tokenABI from '../constants/token_abi.json'
 import { toast } from 'react-toastify';
-const loanContractAddress = '0xb2a41f74f86F459965E0B8F64FdA42bAE1C178F3';
+const loanContractAddress = '0x8E055A629327498a82Cd0Bf06E9144428D3e4f33';
 const tokenContractAddress = '0x69dF8a0E5B51A0122f1e7A34Ce762FB38e354Bfe';
 const loanNFTContractAddress = '0x46612F9eAC1f920375b921378164Bc48938cCd61';
 const loanNFTMarketplaceContractAddress = '0xa5De4a6E6c6CADbD1B667F9383E31069dFdEbfcF';
@@ -273,24 +273,6 @@ export const useAuthClient = () => {
     const tx = await contracts.loan.repayLoan(loanId);
     await tx.wait();
   };
-  
-  const getLoanPaymentStatus = async (loanId) => {
-    if (!contracts.loan) return null;
-    
-    try {
-      const status = await contracts.loan.getLoanPaymentStatus(loanId);
-      
-      return {
-        startTime: status.startTime.toNumber(),
-        lastPayment: status.lastPayment.toNumber(),
-        nextPaymentDue: status.nextPaymentDue.toNumber(),
-        isOverdue: status.isOverdue
-      };
-    } catch (error) {
-      console.error("Error getting loan payment status:", error);
-      return null;
-    }
-  };
 
   const addAdmin = async (newAdmin) => {
     try {
@@ -420,7 +402,6 @@ export const useAuthClient = () => {
     cancelLoan,
     payInterest,
     repayLoan,
-    getLoanPaymentStatus,
     addAdmin,
     removeAdmin,
     getAdmins,
