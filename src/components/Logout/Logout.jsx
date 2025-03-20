@@ -52,7 +52,7 @@ export const Logout = () => {
           <Wallet className={styles.IconWallet} />
           <p className={styles.Address}>{formatAddress(account)}</p>
         </button>
-        {show && (
+        {(isAdmin && show) && (
           <div className={styles.dropdown}>
             <button
               className={styles.buttonToggleMyAccount}
