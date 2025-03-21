@@ -36,6 +36,7 @@ export const MyLoanPage = () => {
   const [stockName, setStockName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingCancelMap, setLoadingCancelMap] = useState({});
   const [activeTab, setActiveTab] = useState("Collateral");
 
   const fetchCollaterals = async () => {
@@ -84,7 +85,7 @@ export const MyLoanPage = () => {
 
   const handleCancel = async (collateralId) => {
     try {
-      setLoading(true);
+      setLoadingCancelMap((prev) => ({ ...prev, [collateralId]: true }));
       await updateCollateralStatus(collateralId, 3);
       fetchCollaterals();
       toast.success("Cancel collaterals successfully!");
@@ -92,7 +93,7 @@ export const MyLoanPage = () => {
       console.error("Error cancelling collateral:", error);
       toast.error("Failed to cancel collateral.");
     } finally {
-      setLoading(false);
+      setLoadingCancelMap((prev) => ({ ...prev, [collateralId]: false }));
     }
   };
 
@@ -247,7 +248,7 @@ export const MyLoanPage = () => {
                                     "&:hover": { borderColor: "#1a4f8a" },
                                   }}
                                   onClick={() => handleCancel(collateral.id)}
-                                  disabled={loading}
+                                  disabled={loadingCancelMap[collateral?.id]}
                                 >
                                   Cancel
                                 </Button>

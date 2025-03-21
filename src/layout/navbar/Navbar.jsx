@@ -43,17 +43,7 @@ export default function Navbar() {
               My Loans
             </Link>
             
-            {isAdmin && (
-              <Link to="/admin-dashboard" className={`${styles.navItem} ${isActiveLink('/admin-dashboard') ? styles.activeNavItem : ''}`}>
-                Admin Dashboard
-              </Link>
-            )}
-
-            {isAdmin && (
-              <Link to="/admin-user-management" className={`${styles.navItem} ${isActiveLink('/admin-user-management') ? styles.activeNavItem : ''}`}>
-                Admin Management
-              </Link>
-            )}
+          
           </nav>
         </div>
 

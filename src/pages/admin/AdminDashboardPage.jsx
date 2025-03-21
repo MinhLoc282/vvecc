@@ -21,9 +21,9 @@ const AdminDashboardPage = () => {
   const { getPendingCollaterals, updateCollateralStatus, contracts } =
     useAuth();
   const [collateralRequests, setCollateralRequests] = useState([]);
-  const [loadingApprove, setLoadingApprove] = useState(false);
-  const [loadingDecline, setLoadingDecline] = useState(false);
-
+  
+  const [loadingApproveMap, setLoadingApproveMap] = useState({});
+  const [loadingDeclineMap, setLoadingDeclineMap] = useState({});
   useEffect(() => {
     if (contracts.loan) {
       const fetchCollaterals = async () => {
@@ -54,7 +54,7 @@ const AdminDashboardPage = () => {
   }, [getPendingCollaterals, contracts]);
 
   const handleApprove = async (id) => {
-    setLoadingApprove(true);
+    setLoadingApproveMap((prev) => ({ ...prev, [id]: true }));
     try {
       await updateCollateralStatus(id, 1);
       setCollateralRequests(
@@ -67,12 +67,12 @@ const AdminDashboardPage = () => {
       console.error("Error approving collateral:", error);
       toast.error("Failed to approve collateral.");
     } finally {
-      setLoadingApprove(false);
+      setLoadingApproveMap((prev) => ({ ...prev, [id]: false }));
     }
   };
 
   const handleDecline = async (id) => {
-    setLoadingDecline(true);
+    setLoadingDeclineMap((prev) => ({ ...prev, [id]: true }));
     try {
       await updateCollateralStatus(id, 2);
       setCollateralRequests(
@@ -85,7 +85,7 @@ const AdminDashboardPage = () => {
       console.error("Error declining collateral:", error);
       toast.error("Failed to decline collateral.");
     } finally {
-      setLoadingDecline(false);
+      setLoadingDeclineMap((prev) => ({ ...prev, [id]: false }));
     }
   };
 
@@ -135,9 +135,9 @@ const AdminDashboardPage = () => {
                                   variant="contained"
                                   sx={{ marginRight: 1 }}
                                   onClick={() => handleApprove(request.id)}
-                                  disabled={loadingApprove}
+                                  disabled={loadingApproveMap[request?.id]}
                                 >
-                                  {loadingApprove ? (
+                                  {loadingApproveMap[request?.id] ? (
                                     <CircularProgress
                                       size={24}
                                       sx={{ color: "white" }}
@@ -150,9 +150,9 @@ const AdminDashboardPage = () => {
                                   variant="outlined"
                                   color="error"
                                   onClick={() => handleDecline(request.id)}
-                                  disabled={loadingDecline}
+                                  disabled={loadingDeclineMap[request?.id]}
                                 >
-                                  {loadingDecline ? (
+                                  {loadingDeclineMap[request?.id] ? (
                                     <CircularProgress
                                       size={24}
                                       sx={{ color: "red" }}

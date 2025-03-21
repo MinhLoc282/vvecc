@@ -23,7 +23,8 @@ const AdminUserManagementPage = () => {
   const [admins, setAdmins] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [newAdminAddress, setNewAdminAddress] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
+  const [loadingMap, setLoadingMap] = useState({});
 
   // Handle open modal
   const handleOpenModal = () => {
@@ -64,15 +65,15 @@ const AdminUserManagementPage = () => {
   };
 
   // Remove an admin
-  const handleRemoveAdmin = async (adminAddress) => {
+  const handleRemoveAdmin = async (adminAddress, adminId) => {
     try {
-      setLoading(true);
+      setLoadingMap((prev) => ({ ...prev, [adminId]: true }));
       await removeAdmin(adminAddress);
       fetchAdmins();
     } catch (error) {
       console.error("Error removing admin:", error);
     } finally {
-      setLoading(false);
+      setLoadingMap((prev) => ({ ...prev, [adminId]: false }));
     }
   };
 
@@ -183,8 +184,8 @@ const AdminUserManagementPage = () => {
                                 borderColor: "red",
                                 "&:hover": { borderColor: "darkred" },
                               }}
-                              onClick={() => handleRemoveAdmin(admin.address)}
-                              disabled={loading}
+                              onClick={() => handleRemoveAdmin(admin.address, admin.id)}
+                              disabled={loadingMap[admin?.id]}
                             >
                               Remove
                             </Button>

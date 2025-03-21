@@ -5,7 +5,7 @@ import styles from "./index.module.css";
 import useClickOutSide from "../../hooks/useClickOutSide";
 import { BarChart2, Briefcase, CreditCard, Menu, Wallet } from "lucide-react";
 import zIndex from "@mui/material/styles/zIndex";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 export const Logout = () => {
   const customStyles = {
     content: {
@@ -33,6 +33,8 @@ export const Logout = () => {
 
   const [modalIsOpen, setIsOpen] = useState(false);
 
+  const location = useLocation();
+
   const formatAddress = (address) => {
     if (!address) return "Loading...";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -45,6 +47,10 @@ export const Logout = () => {
   function closeModal() {
     setIsOpen(false);
   }
+
+  const isActiveLink = (path) => {
+    return location.pathname === path;
+  };
   return (
     <div className={styles.wrapContainer} ref={nodeRef}>
       <div className={styles.Container}>
@@ -52,7 +58,7 @@ export const Logout = () => {
           <Wallet className={styles.IconWallet} />
           <p className={styles.Address}>{formatAddress(account)}</p>
         </button>
-        {(isAdmin && show) && (
+        {show && (
           <div className={styles.dropdown}>
             <button
               className={styles.buttonToggleMyAccount}
@@ -73,6 +79,33 @@ export const Logout = () => {
               <CreditCard className={styles.IconDropdown} />
               Transactions
             </button>
+            {isAdmin && (
+              <button className={styles.buttonToggleIcon}>
+                <Link
+                  to="/admin-dashboard"
+                  className={`${styles.navItem} ${
+                    isActiveLink("/admin-dashboard") ? styles.activeNavItem : ""
+                  }`}
+                >
+                  Admin Dashboard
+                </Link>
+              </button>
+            )}
+
+            {isAdmin && (
+              <button className={styles.buttonToggleIcon}>
+                <Link
+                  to="/admin-user-management"
+                  className={`${styles.navItem} ${
+                    isActiveLink("/admin-user-management")
+                      ? styles.activeNavItem
+                      : ""
+                  }`}
+                >
+                  Admin Management
+                </Link>
+              </button>
+            )}
             <button className={styles.buttonToggleIcon} onClick={logout}>
               Disconnect
             </button>
@@ -108,8 +141,8 @@ export const Logout = () => {
                 My Loans
               </Link> */}
               <Link to="/my-loan" className={styles.navItem}>
-              My Loans
-            </Link>
+                My Loans
+              </Link>
               {isAdmin && (
                 <Link to={"/admin-dashboard"} className={styles.navItem}>
                   Admin Dashboard
