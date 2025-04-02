@@ -18,6 +18,7 @@ import { useAuth } from "../../hooks/use-auth-client";
 import { BigNumber, ethers } from "ethers";
 import { toast } from "react-toastify";
 import styles from "./index.module.css";
+import { bytes32ToString } from "../../utils";
 
 export const ActiveTable = () => {
   const {
@@ -29,17 +30,14 @@ export const ActiveTable = () => {
     account,
   } = useAuth();
 
-  const [collateralOffers, setCollateralOffers] = useState([]);
   const [myActiveLoans, setMyActiveLoans] = useState([]);
   const [loadingAccept, setLoadingAccept] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState({});
 
   const fetchLoans = async () => {
     try {
-      const offers = await getLoansForUserCollaterals(account);
       const activeLoans = await getActiveLoansForUser(account);
 
-      setCollateralOffers(offers);
       setMyActiveLoans(activeLoans);
     } catch (error) {
       console.error("Error fetching loans:", error);
@@ -80,13 +78,6 @@ export const ActiveTable = () => {
     }
   };
 
-  const filteredCollateralOffers = collateralOffers?.filter(
-    (offer) =>
-      offer.accepted ||
-      (offer.accepted === false &&
-        BigNumber.from(offer.acceptedLoanId).toNumber() === 0)
-  );
-
   return (
     <div className={styles.loanContainer}>
       <table className={styles.loanTable}>
@@ -111,9 +102,9 @@ export const ActiveTable = () => {
           ) : (
             myActiveLoans?.map((loan) => (
               <tr key={loan.loanId}>
-                <td>{loan.stockName}</td>
-                <td>{loan.quantity?.toString()}</td>
-                <td>{loan.collateralOwner}</td>
+                <td>{bytes32ToString(loan.collateral.stockName)}</td>
+                <td>{loan.collateral.quantity?.toString()}</td>
+                <td>{loan.collateral.owner}</td>
                 <td>
                   {((BigNumber.from(loan.interestRate).toNumber()) / 100).toString()}%
                 </td>

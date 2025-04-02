@@ -11,3 +11,6 @@ export const LOCATION = {
 
   ADMIN_USER_MANAGEMENT: '/admin-user-management',
 };
+
+export const MAX_LTV_PERCENT = 70;
+export const LTV_DECIMALS = 2;

@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../hooks/use-auth-client';
 import { BigNumber, ethers } from 'ethers';
 import { toast } from 'react-toastify';
+import { bytes32ToString } from '../../utils';
 
 export const LoanNFTMarketplacePage = () => {
   const { contracts, account } = useAuth();
@@ -214,7 +215,7 @@ export const LoanNFTMarketplacePage = () => {
       await approveTx.wait();
       
       const priceInWei = ethers.utils.parseEther(price);
-      const listTx = await contracts.loanNFTMarketplace.listLoanNFT(selectedNFT.tokenId, priceInWei);
+      const listTx = await contracts.loanNFTMarketplace.listLoanNFT(selectedNFT.tokenId, priceInWei, true);
       await listTx.wait();
       
       toast.success('NFT listed successfully!');
@@ -233,13 +234,22 @@ export const LoanNFTMarketplacePage = () => {
     
     setLoadingBuy(true);
     try {
-      const priceInWei = ethers.utils.parseEther(selectedListing.price.toString());
-      // Add a small buffer to account for gas price fluctuations
-      const valueToSend = BigNumber.from(priceInWei).mul(102).div(100);
+      const priceInSmallestUnit = ethers.utils.parseUnits(selectedListing.price.toString(), 18);
       
-      const buyTx = await contracts.loanNFTMarketplace.buyLoanNFT(selectedListing.listingId, {
-        value: valueToSend
-      });
+      const currentAllowance = await contracts.token.allowance(
+        account,
+        contracts.loanNFTMarketplace.address
+      );
+
+      if (currentAllowance.lt(priceInSmallestUnit)) {
+        const approveTx = await contracts.token.approve(
+          contracts.loanNFTMarketplace.address,
+          priceInSmallestUnit
+        );
+        await approveTx.wait();
+      }
+
+      const buyTx = await contracts.loanNFTMarketplace.buyLoanNFTWithERC20(selectedListing.listingId);
       await buyTx.wait();
       
       toast.success('NFT purchased successfully!');
@@ -301,7 +311,7 @@ export const LoanNFTMarketplacePage = () => {
                       <Card sx={{ height: '100%' }}>
                         <CardContent>
                           <Typography variant="h6" sx={{ color: '#236cb2', marginBottom: 1 }}>
-                            {listing.stockName} - {listing.quantity} shares
+                            {bytes32ToString(listing.stockName)} - {listing.quantity} shares
                           </Typography>
                           <Divider sx={{ marginY: 1 }} />
                           <Box sx={{ marginY: 1 }}>
@@ -310,7 +320,7 @@ export const LoanNFTMarketplacePage = () => {
                             <Typography variant="body2">Loan Amount: {listing.loanAmount} USDT</Typography>
                             <Typography variant="body2">Duration: {listing.duration} months</Typography>
                             <Typography variant="body1" sx={{ fontWeight: 'bold', marginTop: 1 }}>
-                              Price: {listing.price} BNB
+                              Price: {listing.price} USDT
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
@@ -357,7 +367,7 @@ export const LoanNFTMarketplacePage = () => {
                       <Card sx={{ height: '100%' }}>
                         <CardContent>
                           <Typography variant="h6" sx={{ color: '#236cb2', marginBottom: 1 }}>
-                            {item.stockName} - {item.quantity} shares
+                            {bytes32ToString(item.stockName)} - {item.quantity} shares
                           </Typography>
                           <Divider sx={{ marginY: 1 }} />
                           <Box sx={{ marginY: 1 }}>
@@ -366,7 +376,7 @@ export const LoanNFTMarketplacePage = () => {
                             <Typography variant="body2">Loan Amount: {item.loanAmount} USDT</Typography>
                             <Typography variant="body2">Duration: {item.duration} months</Typography>
                             <Typography variant="body1" sx={{ fontWeight: 'bold', marginTop: 1 }}>
-                              Listed Price: {item.price} BNB
+                              Listed Price: {item.price} USDT
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
@@ -406,7 +416,7 @@ export const LoanNFTMarketplacePage = () => {
                       <Card sx={{ height: '100%' }}>
                         <CardContent>
                           <Typography variant="h6" sx={{ color: '#236cb2', marginBottom: 1 }}>
-                            {nft.stockName} - {nft.quantity} shares
+                            {bytes32ToString(nft.stockName)} - {nft.quantity} shares
                           </Typography>
                           <Divider sx={{ marginY: 1 }} />
                           <Box sx={{ marginY: 1 }}>
@@ -442,7 +452,7 @@ export const LoanNFTMarketplacePage = () => {
               {selectedNFT && (
                 <>
                   <Typography variant="body1" sx={{ marginBottom: 2 }}>
-                    You are about to list your {selectedNFT.stockName} loan NFT for sale.
+                    You are about to list your {bytes32ToString(selectedNFT.stockName)} loan NFT for sale.
                   </Typography>
                   <Box sx={{ marginBottom: 2 }}>
                     <Typography variant="body2">Token ID: {selectedNFT.tokenId}</Typography>
@@ -452,7 +462,7 @@ export const LoanNFTMarketplacePage = () => {
                     <Typography variant="body2">Duration: {selectedNFT.duration} months</Typography>
                   </Box>
                   <TextField
-                    label="Price (BNB)"
+                    label="Price (USDT)"
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
@@ -487,12 +497,12 @@ export const LoanNFTMarketplacePage = () => {
                     You are about to buy the following loan NFT:
                   </Typography>
                   <Box sx={{ marginBottom: 2 }}>
-                    <Typography variant="body2">Stock: {selectedListing.stockName} - {selectedListing.quantity} shares</Typography>
+                    <Typography variant="body2">Stock: {bytes32ToString(selectedListing.stockName)} - {selectedListing.quantity} shares</Typography>
                     <Typography variant="body2">Interest Rate: {selectedListing.interestRate}%</Typography>
                     <Typography variant="body2">Loan Amount: {selectedListing.loanAmount} USDT</Typography>
                     <Typography variant="body2">Duration: {selectedListing.duration} months</Typography>
                     <Typography variant="body1" sx={{ fontWeight: 'bold', marginTop: 1 }}>
-                      Price: {selectedListing.price} BNB
+                      Price: {selectedListing.price} USDT
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>

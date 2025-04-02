@@ -12,198 +12,245 @@ import {
   Box,
   Modal,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   CircularProgress,
 } from "@mui/material";
 import { useAuth } from "../../hooks/use-auth-client";
 import { BigNumber } from "ethers";
 import { toast } from "react-toastify";
 import styles from "./index.module.css";
+import { bytes32ToString } from "../../utils";
 
 const MarketPlace = () => {
-  const { getAcceptedCollaterals, offerLoan, contracts, account } = useAuth();
-  const [acceptedCollaterals, setAcceptedCollaterals] = useState([]);
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedCollateral, setSelectedCollateral] = useState(null);
-  const [interestRate, setInterestRate] = useState(0.1);
-  const [loanAmount, setLoanAmount] = useState(0);
-  const [duration, setDuration] = useState(6);
-  const [interestRateError, setInterestRateError] = useState("");
-  const [isApproved, setIsApproved] = useState(false);
+  const { 
+    getOpenAuctions, 
+    placeBid, 
+    contracts, 
+    account,
+    getAuctionWithCollateralDetails,
+    getAuctionBids
+  } = useAuth();
+  
+  const [auctions, setAuctions] = useState([]);
+  const [selectedAuction, setSelectedAuction] = useState(null);
+  const [bidInterestRate, setBidInterestRate] = useState(0);
+  const [loadingBidMap, setLoadingBidMap] = useState({});
   const [loadingApproveMap, setLoadingApproveMap] = useState({});
-  const [loadingSubmitMap, setLoadingSubmitMap] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [bidHistory, setBidHistory] = useState([]);
+  const [collateralDetails, setCollateralDetails] = useState(null);
+  const [isApproved, setIsApproved] = useState(false);
 
-  const handleApprove = async (collateralId) => {
-    if (!selectedCollateral || loanAmount <= 0) return;
-    setLoadingApproveMap((prev) => ({ ...prev, [collateralId]: true }));
+  const fetchAuctions = async () => {
     try {
-      const approveTx = await contracts.token.approve(
-        contracts.loan.address,
-        BigNumber.from(loanAmount).mul(BigNumber.from("1000000000000000000"))
-      );
-      await approveTx.wait();
-      setIsApproved(true);
-      console.log("Token approved successfully.", loadingApproveMap);
+      setLoading(true);
+      const openAuctions = await getOpenAuctions();
+
+      const formattedAuctions = openAuctions.map(auction => ({
+        ...auction,
+        auctionId: BigNumber.from(auction.auctionId).toNumber(),
+        collateralId: BigNumber.from(auction.collateralId).toNumber(),
+        requestedAmount: BigNumber.from(auction.requestedAmount).div(BigNumber.from(10).pow(18)).toNumber(),
+        duration: BigNumber.from(auction.duration).toNumber(),
+        lowestInterestRate: BigNumber.from(auction.lowestInterestRate).toNumber(),
+        startTime: BigNumber.from(auction.startTime).toNumber(),
+        endTime: BigNumber.from(auction.endTime).toNumber(),
+      }));
+
+      setAuctions(formattedAuctions);
     } catch (error) {
-      console.error("Error approving token:", error);
+      console.error("Error fetching auctions:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoadingApproveMap((prev) => ({ ...prev, [collateralId]: false }));
   };
 
-  useEffect(() => {
-    const checkApproval = async () => {
-      if (!selectedCollateral || loanAmount <= 0) return;
+  const fetchAuctionDetails = async (auctionId) => {
+    try {
+      const { auction: auctionData, collateral: collateralData} = await getAuctionWithCollateralDetails(auctionId);
 
-      try {
-        const allowance = await contracts.token.allowance(
-          account,
-          contracts.loan.address
-        );
-        const requiredAmount = BigNumber.from(loanAmount).mul(
-          BigNumber.from("1000000000000000000")
-        ); // Convert safely
-        setIsApproved(BigNumber.from(allowance).gte(requiredAmount));
-      } catch (error) {
-        console.error("Error checking token allowance:", error);
+      const formattedAuction = {
+        auctionId: BigNumber.from(auctionData.auctionId).toNumber(),
+        collateralId: BigNumber.from(auctionData.collateralId).toNumber(),
+        requestedAmount: BigNumber.from(auctionData.requestedAmount).div(BigNumber.from(10).pow(18)).toNumber(),
+        duration: BigNumber.from(auctionData.duration).toNumber(),
+        lowestInterestRate: BigNumber.from(auctionData.lowestInterestRate).toNumber(),
+        currentBestLender: auctionData.currentBestLender,
+        startTime: BigNumber.from(auctionData.startTime).toNumber(),
+        endTime: BigNumber.from(auctionData.endTime).toNumber(),
+        status: auctionData.status
+      };
+  
+      const formattedCollateral = {
+        collateralId: BigNumber.from(collateralData.collateralId).toNumber(),
+        owner: collateralData.owner,
+        stockName: bytes32ToString(collateralData.stockName),
+        quantity: BigNumber.from(collateralData.quantity).toNumber(),
+        status: collateralData.status,
+        acceptedLoanId: BigNumber.from(collateralData.acceptedLoanId).toNumber(),
+        requestedAmount: BigNumber.from(collateralData.requestedAmount).div(BigNumber.from(10).pow(18)).toNumber(),
+        duration: BigNumber.from(collateralData.duration).toNumber(),
+        auctionId: BigNumber.from(collateralData.auctionId).toNumber()
+      };
+  
+      setSelectedAuction(formattedAuction);
+      setCollateralDetails(formattedCollateral);
+      
+      // Check approval status for this auction amount
+      await checkTokenApproval(formattedAuction.requestedAmount);
+      
+      // Get bid history
+      const bids = await getAuctionBids(auctionId);
+
+      const formattedBids = bids.map(bid => ({
+        auctionId: BigNumber.from(bid.auctionId).toNumber(),
+        lender: bid.lender,
+        interestRate: BigNumber.from(bid.interestRate).toNumber(),
+        timestamp: BigNumber.from(bid.timestamp).toNumber()
+      }));
+      setBidHistory(formattedBids);
+    } catch (error) {
+      console.error("Error fetching auction details:", error);
+    }
+  };
+
+  const checkTokenApproval = async (amount) => {
+    try {
+      if (!contracts.token || !account) {
+        setIsApproved(false);
+        return;
       }
-    };
 
-    checkApproval();
-  }, [loanAmount, selectedCollateral, contracts, account]);
+      const allowance = await contracts.token.allowance(
+        account,
+        contracts.loan.address
+      );
+      const requiredAmount = BigNumber.from(amount).mul(BigNumber.from(10).pow(18));
+      setIsApproved(BigNumber.from(allowance).gte(requiredAmount));
+    } catch (error) {
+      console.error("Error checking token allowance:", error);
+      setIsApproved(false);
+    }
+  };
+
+  const handleApproveToken = async (amount) => {
+    try {
+      setLoadingApproveMap((prev) => ({ ...prev, [selectedAuction.auctionId]: true }));
+      
+      const tx = await contracts.token.approve(
+        contracts.loan.address,
+        BigNumber.from(amount).mul(BigNumber.from(10).pow(18))
+      );
+      await tx.wait();
+      
+      setIsApproved(true);
+      toast.success("Token approval successful!");
+    } catch (error) {
+      console.error("Error approving token:", error);
+      toast.error("Failed to approve tokens");
+    } finally {
+      setLoadingApproveMap((prev) => ({ ...prev, [selectedAuction.auctionId]: false }));
+    }
+  };
+
+  const handleOpenBidModal = async (auction) => {
+    setSelectedAuction(auction);
+    await fetchAuctionDetails(auction.auctionId);
+  };
+
+  const handleCloseBidModal = () => {
+    setSelectedAuction(null);
+    setBidInterestRate(0);
+    setBidHistory([]);
+    setCollateralDetails(null);
+    setIsApproved(false);
+  };
+
+  const handlePlaceBid = async (auctionId) => {
+    if (!bidInterestRate || bidInterestRate <= 0) {
+      toast.error("Please enter a valid interest rate");
+      return;
+    }
+
+    try {
+      setLoadingBidMap((prev) => ({ ...prev, [auctionId]: true }));
+
+      const interestRateBasisPoints = Math.round(bidInterestRate * 100);
+      
+      await placeBid(auctionId, interestRateBasisPoints);
+      toast.success("Bid placed successfully!");
+      
+      await fetchAuctions();
+      await fetchAuctionDetails(auctionId);
+    } catch (error) {
+      console.error("Error placing bid:", error);
+      toast.error(`Failed to place bid: ${error.message}`);
+    } finally {
+      setLoadingBidMap((prev) => ({ ...prev, [auctionId]: false }));
+    }
+  };
+
+  const formatTimeRemaining = (endTime) => {
+    const now = Math.floor(Date.now() / 1000);
+    const remainingSeconds = Math.max(0, endTime - now);
+    
+    const days = Math.floor(remainingSeconds / (24 * 60 * 60));
+    const hours = Math.floor((remainingSeconds % (24 * 60 * 60)) / (60 * 60));
+    const minutes = Math.floor((remainingSeconds % (60 * 60)) / 60);
+    
+    return `${days}d ${hours}h ${minutes}m`;
+  };
 
   useEffect(() => {
     if (contracts.loan) {
-      const fetchCollaterals = async () => {
-        try {
-          const collaterals = await getAcceptedCollaterals();
-
-          const formattedCollaterals = collaterals
-            .map((collateral) => ({
-              id: BigNumber.from(collateral.collateralId).toNumber(),
-              owner: collateral.owner,
-              stockName: collateral.stockName,
-              quantity: BigNumber.from(collateral.quantity).toNumber(),
-              status:
-                collateral.status === 0
-                  ? "Pending"
-                  : collateral.status === 1
-                  ? "Approved"
-                  : collateral.status === 2
-                  ? "Declined"
-                  : "Cancelled",
-              acceptedLoanId: BigNumber.from(
-                collateral.acceptedLoanId
-              ).toNumber(),
-            }))
-            .filter(
-              (collateral) =>
-                collateral.owner.toLowerCase() !== account.toLowerCase() &&
-                collateral.acceptedLoanId === 0
-            );
-          setAcceptedCollaterals(formattedCollaterals);
-        } catch (error) {
-          console.error("Error fetching accepted collaterals:", error);
-        }
-      };
-      fetchCollaterals();
+      fetchAuctions();
     }
-  }, [getAcceptedCollaterals, contracts]);
-
-  const handleOpenModal = (collateral) => {
-    setSelectedCollateral(collateral);
-    setOpenModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setSelectedCollateral(null);
-    setInterestRate(0.1);
-    setLoanAmount(0);
-    setDuration(6);
-    setInterestRateError("");
-  };
-
-  const validateInterestRate = (value) => {
-    if (value < 0.1 || value > 40) {
-      setInterestRateError("Interest rate must be between 0.1% and 40%.");
-      return false;
-    } else {
-      setInterestRateError("");
-      return true;
-    }
-  };
-
-  const handleInterestRateChange = (e) => {
-    const value = parseFloat(e.target.value);
-    setInterestRate(value);
-    validateInterestRate(value);
-  };
-
-  const handleSubmitLoanRequest = async (collateralId) => {
-    if (
-      selectedCollateral &&
-      loanAmount > 0 &&
-      validateInterestRate(interestRate) &&
-      isApproved
-    ) {
-      setLoadingSubmitMap((prev) => ({ ...prev, [collateralId]: true }));
-      try {
-        await offerLoan(
-          selectedCollateral.id,
-          interestRate * 100,
-          BigNumber.from(loanAmount).mul(BigNumber.from("1000000000000000000")),
-          duration
-        );
-        toast.success("Offer loan successfully!");
-      } catch (error) {
-        console.error("Error submitting loan request:", error);
-        toast.error("Failed to offer loan.");
-      } finally {
-        setLoadingSubmitMap((prev) => ({ ...prev, [collateralId]: false }));
-        handleCloseModal();
-      }
-    }
-  };
-
-
+  }, [contracts]);
 
   return (
     <div className={styles.loanContainer}>
-      {/* <Typography variant="h4" color="primary" sx={{ color: 'rgb(0, 50, 99)', marginBottom: 3 }}>
-        Loan Marketplace
-      </Typography> */}
       <table className={styles.loanTable}>
         <thead>
           <tr>
-            <th sx={{ fontWeight: "bold" }}>Stock Name</th>
-            <th sx={{ fontWeight: "bold" }}>Quantity</th>
-            <th sx={{ fontWeight: "bold" }}>Owner</th>
-            <th sx={{ fontWeight: "bold" }}>Action</th>
+            <th>Collateral</th>
+            <th>Requested Amount</th>
+            <th>Duration</th>
+            <th>Current Best Rate</th>
+            <th>Time Remaining</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {acceptedCollaterals.length === 0 ? (
+          {loading ? (
             <tr>
-              <td colSpan={4} align="center">
-                No collaterals found.
+              <td colSpan={6} align="center">
+                <CircularProgress />
+              </td>
+            </tr>
+          ) : auctions.length === 0 ? (
+            <tr>
+              <td colSpan={6} align="center">
+                No open auctions found
               </td>
             </tr>
           ) : (
-            acceptedCollaterals.map((collateral) => (
-              <tr key={collateral.id}>
-                <td>{collateral.stockName}</td>
-                <td>{collateral.quantity}</td>
-                <td>{collateral.owner}</td>
+            auctions.map((auction) => (
+              <tr key={auction.auctionId}>
+                <td>Auction #{auction.auctionId}</td>
+                <td>{auction.requestedAmount} USDT</td>
+                <td>{auction.duration} months</td>
+                <td>
+                  {auction.lowestInterestRate > 0 
+                    ? `${(auction.lowestInterestRate / 100).toFixed(2)}%` 
+                    : "No bids yet"}
+                </td>
+                <td>{formatTimeRemaining(auction.endTime)}</td>
                 <td>
                   <Button
-                    variant="outlined"
-                    sx={{ color: "#236cb2", borderColor: "#236cb2" }}
-                    onClick={() => handleOpenModal(collateral)}
+                    variant="contained"
+                    sx={{ backgroundColor: "#236cb2" }}
+                    onClick={() => handleOpenBidModal(auction)}
                   >
-                    Request Loan
+                    Place Bid
                   </Button>
                 </td>
               </tr>
@@ -211,102 +258,140 @@ const MarketPlace = () => {
           )}
         </tbody>
       </table>
-      <Modal open={openModal} onClose={handleCloseModal}>
+
+      {/* Bid Modal */}
+      <Modal open={!!selectedAuction} onClose={handleCloseBidModal}>
         <Box
           sx={{
             position: "absolute",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 400,
+            width: 600,
             backgroundColor: "white",
             padding: 3,
             borderRadius: 2,
             boxShadow: 24,
           }}
         >
-          <Typography variant="h6">
-            Request Loan for {selectedCollateral?.stockName}
-          </Typography>
-          <TextField
-            label="Interest Rate (%)"
-            type="number"
-            value={interestRate}
-            onChange={handleInterestRateChange}
-            fullWidth
-            required
-            inputProps={{ min: 0.1, max: 40, step: 0.1 }}
-            error={!!interestRateError}
-            helperText={interestRateError}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            label="Loan Amount"
-            type="number"
-            value={loanAmount}
-            onChange={(e) => setLoanAmount(parseFloat(e.target.value))}
-            fullWidth
-            required
-            inputProps={{ max: selectedCollateral?.quantity }}
-            sx={{ marginBottom: 2 }}
-          />
-          <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <InputLabel>Duration</InputLabel>
-            <Select
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              label="Duration"
-            >
-              <MenuItem value={6}>6 Months</MenuItem>
-              <MenuItem value={8}>8 Months</MenuItem>
-              <MenuItem value={12}>12 Months</MenuItem>
-              <MenuItem value={12}>1 Year</MenuItem>
-              <MenuItem value={18}>1.5 Years</MenuItem>
-              <MenuItem value={24}>2 Years</MenuItem>
-            </Select>
-          </FormControl>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-            <Button
-              variant="outlined"
-              sx={{ color: "#236cb2", borderColor: "#236cb2" }}
-              onClick={handleCloseModal}
-            >
-              Cancel
-            </Button>
-            {!isApproved ? (
-              <Button
-                variant="contained"
-                sx={{ backgroundColor: "#236cb2" }}
-                onClick={() => handleApprove(selectedCollateral.id)}
-                disabled={
-                  loanAmount <= 0 || loadingApproveMap[selectedCollateral?.id]
+          {selectedAuction && collateralDetails && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Place Bid for Auction #{selectedAuction.auctionId}
+              </Typography>
+              
+              <Typography variant="body1" gutterBottom>
+                <strong>Collateral:</strong> {collateralDetails.stockName} ({collateralDetails.quantity} shares)
+              </Typography>
+              
+              <Typography variant="body1" gutterBottom>
+                <strong>Requested Amount:</strong> {selectedAuction.requestedAmount} USDT
+              </Typography>
+              
+              <Typography variant="body1" gutterBottom>
+                <strong>Duration:</strong> {selectedAuction.duration} months
+              </Typography>
+              
+              <Typography variant="body1" gutterBottom>
+                <strong>Current Best Rate:</strong> {selectedAuction.lowestInterestRate > 0 
+                  ? `${(selectedAuction.lowestInterestRate / 100).toFixed(2)}%` 
+                  : "No bids yet"}
+              </Typography>
+              
+              <Typography variant="body1" gutterBottom>
+                <strong>Time Remaining:</strong> {formatTimeRemaining(selectedAuction.endTime)}
+              </Typography>
+
+              <TextField
+                label="Your Bid Interest Rate (%)"
+                type="number"
+                value={bidInterestRate}
+                onChange={(e) => setBidInterestRate(parseFloat(e.target.value) || 0)}
+                fullWidth
+                margin="normal"
+                inputProps={{
+                  min: 0.1,
+                  max: 40,
+                  step: 0.1
+                }}
+                helperText={
+                  selectedAuction.lowestInterestRate > 0
+                    ? `Must be lower than current best rate (${(selectedAuction.lowestInterestRate / 100).toFixed(2)}%)`
+                    : "Enter your desired interest rate (0.1% - 40%)"
                 }
-              >
-                {loadingApproveMap[selectedCollateral?.id] ? (
-                  <CircularProgress size={24} sx={{ color: "white" }} />
+              />
+
+              {bidHistory.length > 0 && (
+                <Box mt={2}>
+                  <Typography variant="subtitle1">Bid History:</Typography>
+                  <TableContainer component={Paper} sx={{ maxHeight: 200, overflow: 'auto' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Lender</TableCell>
+                          <TableCell>Rate</TableCell>
+                          <TableCell>Time</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {bidHistory.map((bid, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{bid.lender}</TableCell>
+                            <TableCell>{(bid.interestRate / 100).toFixed(2)}%</TableCell>
+                            <TableCell>{new Date(bid.timestamp * 1000).toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+
+              <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
+                <Button
+                  variant="outlined"
+                  sx={{ color: "#236cb2", borderColor: "#236cb2" }}
+                  onClick={handleCloseBidModal}
+                >
+                  Cancel
+                </Button>
+                
+                {!isApproved ? (
+                  <Button
+                    variant="contained"
+                    sx={{ backgroundColor: "#236cb2" }}
+                    onClick={() => handleApproveToken(selectedAuction.requestedAmount)}
+                    disabled={loadingApproveMap[selectedAuction.auctionId]}
+                  >
+                    {loadingApproveMap[selectedAuction.auctionId] ? (
+                      <CircularProgress size={24} sx={{ color: "white" }} />
+                    ) : (
+                      "Approve USDT"
+                    )}
+                  </Button>
                 ) : (
-                  "Approve"
+                  <Button
+                    variant="contained"
+                    sx={{ backgroundColor: "#236cb2" }}
+                    onClick={() => handlePlaceBid(selectedAuction.auctionId)}
+                    disabled={
+                      !bidInterestRate || 
+                      bidInterestRate <= 0 || 
+                      loadingBidMap[selectedAuction.auctionId] ||
+                      (selectedAuction.lowestInterestRate > 0 && 
+                       bidInterestRate >= selectedAuction.lowestInterestRate / 100)
+                    }
+                  >
+                    {loadingBidMap[selectedAuction.auctionId] ? (
+                      <CircularProgress size={24} sx={{ color: "white" }} />
+                    ) : (
+                      "Place Bid"
+                    )}
+                  </Button>
                 )}
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                sx={{ backgroundColor: "#236cb2" }}
-                onClick={() => handleSubmitLoanRequest(selectedCollateral.id)}
-                disabled={
-                  !!interestRateError ||
-                  loanAmount <= 0 ||
-                  loadingSubmitMap[selectedCollateral?.id]
-                }
-              >
-                {loadingSubmitMap[selectedCollateral?.id] ? (
-                  <CircularProgress size={24} sx={{ color: "white" }} />
-                ) : (
-                  "Submit"
-                )}
-              </Button>
-            )}
-          </Box>
+              </Box>
+            </>
+          )}
         </Box>
       </Modal>
     </div>

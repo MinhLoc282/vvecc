@@ -2,6 +2,68 @@
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "listingId",
+				"type": "uint256"
+			}
+		],
+		"name": "buyLoanNFT",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "listingId",
+				"type": "uint256"
+			}
+		],
+		"name": "buyLoanNFTWithERC20",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "listingId",
+				"type": "uint256"
+			}
+		],
+		"name": "cancelListing",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "_useERC20",
+				"type": "bool"
+			}
+		],
+		"name": "listLoanNFT",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_loanNFT",
 				"type": "address"
@@ -9,6 +71,11 @@
 			{
 				"internalType": "address",
 				"name": "_collateralLoan",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_usdtToken",
 				"type": "address"
 			}
 		],
@@ -69,6 +136,12 @@
 				"internalType": "uint256",
 				"name": "price",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "useERC20",
+				"type": "bool"
 			}
 		],
 		"name": "Listed",
@@ -113,6 +186,13 @@
 		"type": "event"
 	},
 	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -144,6 +224,12 @@
 				"internalType": "uint256",
 				"name": "price",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "paidWithERC20",
+				"type": "bool"
 			}
 		],
 		"name": "Sale",
@@ -153,24 +239,55 @@
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "listingId",
+				"name": "_fee",
 				"type": "uint256"
 			}
 		],
-		"name": "buyLoanNFT",
+		"name": "setFee",
 		"outputs": [],
-		"stateMutability": "payable",
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "_usdtToken",
+				"type": "address"
+			}
+		],
+		"name": "setUSDTToken",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "tokenAddress",
+				"type": "address"
+			},
+			{
 				"internalType": "uint256",
-				"name": "listingId",
+				"name": "amount",
 				"type": "uint256"
 			}
 		],
-		"name": "cancelListing",
+		"name": "withdrawERC20",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -223,6 +340,11 @@
 						"internalType": "bool",
 						"name": "sold",
 						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "useERC20",
+						"type": "bool"
 					}
 				],
 				"internalType": "struct LoanNFTMarketplace.Listing[]",
@@ -267,6 +389,11 @@
 					{
 						"internalType": "bool",
 						"name": "sold",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "useERC20",
 						"type": "bool"
 					}
 				],
@@ -324,6 +451,11 @@
 			{
 				"internalType": "bool",
 				"name": "sold",
+				"type": "bool"
+			},
+			{
+				"internalType": "bool",
+				"name": "acceptsERC20",
 				"type": "bool"
 			}
 		],
@@ -414,24 +546,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "price",
-				"type": "uint256"
-			}
-		],
-		"name": "listLoanNFT",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "loanNFT",
 		"outputs": [
@@ -459,35 +573,15 @@
 	},
 	{
 		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
+		"name": "usdtToken",
+		"outputs": [
 			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			}
-		],
-		"name": "setFee",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
+				"internalType": "contract IERC20",
+				"name": "",
 				"type": "address"
 			}
 		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	}
 ]
