@@ -44,12 +44,10 @@ function LoginButton() {
 }
 
 function Header() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  useEffect(() => {
-    login();
-  }, []);
+  // Không cần useEffect để auto-login, để user tự click
 
   return (
     <div className={styles.AuthSection}>

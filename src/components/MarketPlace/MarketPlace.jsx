@@ -1,17 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Typography,
-  Box,
   Modal,
-  TextField,
   CircularProgress,
 } from "@mui/material";
 import { useAuth } from "../../hooks/use-auth-client";
@@ -19,6 +8,7 @@ import { BigNumber } from "ethers";
 import { toast } from "react-toastify";
 import styles from "./index.module.css";
 import { bytes32ToString } from "../../utils";
+import useTheme from "../../hooks/useTheme";
 
 const MarketPlace = () => {
   const { 
@@ -39,6 +29,9 @@ const MarketPlace = () => {
   const [bidHistory, setBidHistory] = useState([]);
   const [collateralDetails, setCollateralDetails] = useState(null);
   const [isApproved, setIsApproved] = useState(false);
+
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
 
   const fetchAuctions = async () => {
     try {
@@ -207,7 +200,7 @@ const MarketPlace = () => {
   }, [contracts]);
 
   return (
-    <div className={styles.loanContainer}>
+    <div className={`${styles.loanContainer} ${isDarkMode ? styles.dark : ''}`}>
       <table className={styles.loanTable}>
         <thead>
           <tr>
@@ -245,13 +238,12 @@ const MarketPlace = () => {
                 </td>
                 <td>{formatTimeRemaining(auction.endTime)}</td>
                 <td>
-                  <Button
-                    variant="contained"
-                    sx={{ backgroundColor: "#236cb2" }}
+                  <button
+                    className={styles.loanButton}
                     onClick={() => handleOpenBidModal(auction)}
                   >
                     Place Bid
-                  </Button>
+                  </button>
                 </td>
               </tr>
             ))
@@ -261,138 +253,205 @@ const MarketPlace = () => {
 
       {/* Bid Modal */}
       <Modal open={!!selectedAuction} onClose={handleCloseBidModal}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 600,
-            backgroundColor: "white",
-            padding: 3,
-            borderRadius: 2,
-            boxShadow: 24,
-          }}
-        >
-          {selectedAuction && collateralDetails && (
-            <>
-              <Typography variant="h6" gutterBottom>
-                Place Bid for Auction #{selectedAuction.auctionId}
-              </Typography>
-              
-              <Typography variant="body1" gutterBottom>
-                <strong>Collateral:</strong> {collateralDetails.stockName} ({collateralDetails.quantity} shares)
-              </Typography>
-              
-              <Typography variant="body1" gutterBottom>
-                <strong>Requested Amount:</strong> {selectedAuction.requestedAmount} USDT
-              </Typography>
-              
-              <Typography variant="body1" gutterBottom>
-                <strong>Duration:</strong> {selectedAuction.duration} months
-              </Typography>
-              
-              <Typography variant="body1" gutterBottom>
-                <strong>Current Best Rate:</strong> {selectedAuction.lowestInterestRate > 0 
-                  ? `${(selectedAuction.lowestInterestRate / 100).toFixed(2)}%` 
-                  : "No bids yet"}
-              </Typography>
-              
-              <Typography variant="body1" gutterBottom>
-                <strong>Time Remaining:</strong> {formatTimeRemaining(selectedAuction.endTime)}
-              </Typography>
+        <div className={`${styles.modalOverlay} ${isDarkMode ? styles.dark : ''}`}>
+          <div className={styles.modalContainer}>
+            {/* Header */}
+            <div className={styles.modalHeader}>
+              <div className={styles.headerContent}>
+                <div className={styles.iconWrapper}>
+                  <svg 
+                    className={styles.headerIcon} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" 
+                    />
+                  </svg>
+                </div>
+                <div className={styles.titleSection}>
+                  <h2 className={styles.modalTitle}>Place Bid on Auction</h2>
+                  <p className={styles.modalSubtitle}>Review auction details and submit your bid</p>
+                </div>
+              </div>
+              <button 
+                className={styles.closeButton}
+                onClick={handleCloseBidModal}
+                disabled={loadingBidMap[selectedAuction?.auctionId] || loadingApproveMap[selectedAuction?.auctionId]}
+              >
+                <svg className={styles.closeIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-              <TextField
-                label="Your Bid Interest Rate (%)"
-                type="number"
-                value={bidInterestRate}
-                onChange={(e) => setBidInterestRate(parseFloat(e.target.value) || 0)}
-                fullWidth
-                margin="normal"
-                inputProps={{
-                  min: 0.1,
-                  max: 40,
-                  step: 0.1
-                }}
-                helperText={
-                  selectedAuction.lowestInterestRate > 0
-                    ? `Must be lower than current best rate (${(selectedAuction.lowestInterestRate / 100).toFixed(2)}%)`
-                    : "Enter your desired interest rate (0.1% - 40%)"
-                }
-              />
+            {/* Content */}
+            <div className={styles.modalContent}>
+              {selectedAuction && collateralDetails && (
+                <>
+                  {/* Auction Preview Card */}
+                  <div className={styles.auctionPreview}>
+                    <div className={styles.auctionHeader}>
+                      <h3 className={styles.auctionTitle}>
+                        Auction #{selectedAuction.auctionId} - {collateralDetails.stockName}
+                      </h3>
+                      <div className={styles.statusBadge}>
+                        <svg className={styles.statusIcon} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Active
+                      </div>
+                    </div>
+                    
+                    <div className={styles.auctionDetails}>
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Collateral</span>
+                        <span className={styles.detailValue}>{collateralDetails.stockName} ({collateralDetails.quantity} shares)</span>
+                      </div>
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Requested Amount</span>
+                        <span className={styles.detailValue}>{selectedAuction.requestedAmount} USDT</span>
+                      </div>
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Duration</span>
+                        <span className={styles.detailValue}>{selectedAuction.duration} months</span>
+                      </div>
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Current Best Rate</span>
+                        <span className={styles.detailValue}>
+                          {selectedAuction.lowestInterestRate > 0 
+                            ? `${(selectedAuction.lowestInterestRate / 100).toFixed(2)}%` 
+                            : "No bids yet"}
+                        </span>
+                      </div>
+                      <div className={styles.detailRow}>
+                        <span className={styles.detailLabel}>Time Remaining</span>
+                        <span className={styles.detailValue}>{formatTimeRemaining(selectedAuction.endTime)}</span>
+                      </div>
+                    </div>
+                  </div>
 
-              {bidHistory.length > 0 && (
-                <Box mt={2}>
-                  <Typography variant="subtitle1">Bid History:</Typography>
-                  <TableContainer component={Paper} sx={{ maxHeight: 200, overflow: 'auto' }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Lender</TableCell>
-                          <TableCell>Rate</TableCell>
-                          <TableCell>Time</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {bidHistory.map((bid, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{bid.lender}</TableCell>
-                            <TableCell>{(bid.interestRate / 100).toFixed(2)}%</TableCell>
-                            <TableCell>{new Date(bid.timestamp * 1000).toLocaleString()}</TableCell>
-                          </TableRow>
+                  {/* Bid Input Section */}
+                  <div className={styles.bidInputSection}>
+                    <label className={styles.inputLabel}>Your Bid Interest Rate (%)</label>
+                    <input
+                      type="number"
+                      className={styles.bidInput}
+                      value={bidInterestRate}
+                      onChange={(e) => setBidInterestRate(parseFloat(e.target.value) || 0)}
+                      placeholder="Enter interest rate"
+                      min="0.1"
+                      max="40"
+                      step="0.1"
+                    />
+                    <p className={styles.inputHelper}>
+                      {selectedAuction.lowestInterestRate > 0
+                        ? `Must be lower than current best rate (${(selectedAuction.lowestInterestRate / 100).toFixed(2)}%)`
+                        : "Enter your desired interest rate (0.1% - 40%)"}
+                    </p>
+                  </div>
+
+                  {/* Bid History */}
+                  {bidHistory.length > 0 && (
+                    <div className={styles.bidHistorySection}>
+                      <h4 className={styles.sectionTitle}>Bid History</h4>
+                      <div className={styles.bidHistoryTable}>
+                        <div className={styles.tableHeader}>
+                          <span>Lender</span>
+                          <span>Rate</span>
+                          <span>Time</span>
+                        </div>
+                        {bidHistory.slice(0, 5).map((bid, index) => (
+                          <div key={index} className={styles.tableRow}>
+                            <span className={styles.tableCell}>{bid.lender.slice(0, 6)}...{bid.lender.slice(-4)}</span>
+                            <span className={styles.tableCell}>{(bid.interestRate / 100).toFixed(2)}%</span>
+                            <span className={styles.tableCell}>{new Date(bid.timestamp * 1000).toLocaleDateString()}</span>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              )}
+                      </div>
+                    </div>
+                  )}
 
-              <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
-                <Button
-                  variant="outlined"
-                  sx={{ color: "#236cb2", borderColor: "#236cb2" }}
-                  onClick={handleCloseBidModal}
+                  {/* Warning Notice */}
+                  <div className={styles.warningNotice}>
+                    <svg className={styles.warningIcon} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div className={styles.warningText}>
+                      <p className={styles.warningTitle}>Important Notice</p>
+                      <p className={styles.warningDescription}>
+                        By placing a bid, you commit to providing the loan at your specified interest rate if you win the auction.
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className={styles.modalFooter}>
+              <button 
+                className={styles.cancelButton}
+                onClick={handleCloseBidModal}
+                disabled={loadingBidMap[selectedAuction?.auctionId] || loadingApproveMap[selectedAuction?.auctionId]}
+              >
+                Cancel
+              </button>
+              
+              {!isApproved ? (
+                <button
+                  className={styles.confirmButton}
+                  onClick={() => handleApproveToken(selectedAuction.requestedAmount)}
+                  disabled={loadingApproveMap[selectedAuction?.auctionId]}
                 >
-                  Cancel
-                </Button>
-                
-                {!isApproved ? (
-                  <Button
-                    variant="contained"
-                    sx={{ backgroundColor: "#236cb2" }}
-                    onClick={() => handleApproveToken(selectedAuction.requestedAmount)}
-                    disabled={loadingApproveMap[selectedAuction.auctionId]}
-                  >
-                    {loadingApproveMap[selectedAuction.auctionId] ? (
-                      <CircularProgress size={24} sx={{ color: "white" }} />
-                    ) : (
-                      "Approve USDT"
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    sx={{ backgroundColor: "#236cb2" }}
-                    onClick={() => handlePlaceBid(selectedAuction.auctionId)}
-                    disabled={
-                      !bidInterestRate || 
-                      bidInterestRate <= 0 || 
-                      loadingBidMap[selectedAuction.auctionId] ||
-                      (selectedAuction.lowestInterestRate > 0 && 
-                       bidInterestRate >= selectedAuction.lowestInterestRate / 100)
-                    }
-                  >
-                    {loadingBidMap[selectedAuction.auctionId] ? (
-                      <CircularProgress size={24} sx={{ color: "white" }} />
-                    ) : (
-                      "Place Bid"
-                    )}
-                  </Button>
-                )}
-              </Box>
-            </>
-          )}
-        </Box>
+                  {loadingApproveMap[selectedAuction?.auctionId] ? (
+                    <>
+                      <div className={styles.spinner}></div>
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <svg className={styles.buttonIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Approve USDT
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  className={styles.confirmButton}
+                  onClick={() => handlePlaceBid(selectedAuction.auctionId)}
+                  disabled={
+                    !bidInterestRate || 
+                    bidInterestRate <= 0 || 
+                    loadingBidMap[selectedAuction?.auctionId] ||
+                    (selectedAuction.lowestInterestRate > 0 && 
+                     bidInterestRate >= selectedAuction.lowestInterestRate / 100)
+                  }
+                >
+                  {loadingBidMap[selectedAuction?.auctionId] ? (
+                    <>
+                      <div className={styles.spinner}></div>
+                      Placing Bid...
+                    </>
+                  ) : (
+                    <>
+                      <svg className={styles.buttonIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Place Bid
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </Modal>
     </div>
   );

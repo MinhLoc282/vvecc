@@ -3,14 +3,6 @@ import styles from "./index.module.css";
 import { useAuth } from "../../hooks/use-auth-client";
 import {
   Button,
-  Typography,
-  Box,
-  Modal,
-  TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   CircularProgress,
   Stack,
 } from "@mui/material";
@@ -20,8 +12,14 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { bytes32ToString } from "../../utils";
 import { LTV_DECIMALS } from "../../constants";
+import { TabContainer } from "../../components/TabContainer";
+import AddCollateralModal from "../../components/AddCollateralModal";
+import useTheme from "../../hooks/useTheme";
 
 export const MyLoanPage = () => {
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
+  
   const tabs = [
     { id: "Collateral", label: "My Collateral" },
     { id: "Loans", label: "My Loans" },
@@ -603,9 +601,8 @@ export const MyLoanPage = () => {
   useEffect(() => {
     calculateMaxLoan();
   }, [stockName, quantity]);
-
   return (
-    <div className={styles.wrapContainer}>
+    <div className={`${styles.wrapContainer} ${isDarkMode ? styles.dark : ""}`}>
       <div className={styles.container}>
         <div className={styles.wrapFirstContent}>
           <div className={styles.content}>
@@ -615,138 +612,31 @@ export const MyLoanPage = () => {
             <div className={styles.primaryButton} onClick={handleOpenModal}>
               <AddIcon /> Add Collateral
             </div>
-          </div>
-          <Modal open={openModal} onClose={handleCloseModal}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: 400,
-                backgroundColor: "white",
-                padding: 3,
-                borderRadius: 2,
-                boxShadow: 24,
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ color: "rgb(0, 50, 99)", marginBottom: 2 }}
-              >
-                Add Collateral
-              </Typography>
-              <FormControl fullWidth sx={{ marginBottom: 2 }}>
-                <InputLabel>Stock Name</InputLabel>
-                <Select
-                  value={stockName}
-                  label="Stock Name"
-                  onChange={(e) => setStockName(e.target.value)}
-                  required
-                >
-                  {collateralTypes
-                    .filter(type => type.isActive)
-                    .map((type) => (
-                      <MenuItem key={type.symbol} value={type.symbol}>
-                        {type.symbol}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-              <TextField
-                label="Quantity"
-                type="number"
-                value={quantity}
-                onChange={(e) => {
-                  setQuantity(e.target.value);
-                  calculateMaxLoan();
-                }}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-              />
-              {maxLoanAmount && (
-                <Typography variant="body2" sx={{ mb: 1, color: "#666" }}>
-                  Max loan amount: {parseFloat(maxLoanAmount).toFixed(2)} USDT (70% of collateral value)
-                </Typography>
-              )}
-              <TextField
-                label="Requested Amount (USDT)"
-                type="number"
-                value={requestedAmount}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
-                    setRequestedAmount(value);
-                  }
-                }}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-                helperText={maxLoanAmount && `Max: ${parseFloat(maxLoanAmount).toFixed(2)} USDT`}
-              />
-              <FormControl fullWidth sx={{ marginBottom: 2 }}>
-                <InputLabel>Duration (months)</InputLabel>
-                <Select
-                  value={duration}
-                  label="Duration (months)"
-                  onChange={(e) => setDuration(e.target.value)}
-                >
-                  <MenuItem value={6}>6 months</MenuItem>
-                  <MenuItem value={8}>8 months</MenuItem>
-                  <MenuItem value={12}>12 months</MenuItem>
-                  <MenuItem value={18}>18 months</MenuItem>
-                  <MenuItem value={24}>24 months</MenuItem>
-                </Select>
-              </FormControl>
-              <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-                <Button
-                  variant="outlined"
-                  sx={{ color: "#236cb2", borderColor: "#236cb2" }}
-                  onClick={handleCloseModal}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  sx={{
-                    backgroundColor: "#236cb2",
-                    "&:hover": { backgroundColor: "#1a4f8a" },
-                  }}
-                  onClick={handleAddCollateral}
-                  disabled={
-                    !stockName || 
-                    !quantity || 
-                    !requestedAmount || 
-                    loading ||
-                    (maxLoanAmount && parseFloat(requestedAmount) > parseFloat(maxLoanAmount))
-                  }
-                >
-                  {loading ? "Adding..." : "Add"}
-                </Button>
-              </Box>
-            </Box>
-          </Modal>
-        </div>
-
-        <div className={styles.wrapThirdContent}>
-          <div className={styles.wrapTabContainer}>
-            <div className={styles.wrapTab}>
-              {tabs.map((tab) => (
-                <div
-                  key={tab.id}
-                  className={`${styles.tab} ${
-                    activeTab === tab.id ? styles.active : styles.inactive
-                  }`}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  {tab.label}
-                </div>
-              ))}
-            </div>
-            <div className={styles.wrapContent}>
-              {activeTab === "Collateral" && (
-                <div className={styles.loanContainer}>
+          </div>          <AddCollateralModal
+            open={openModal}
+            onClose={handleCloseModal}
+            stockName={stockName}
+            setStockName={setStockName}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            requestedAmount={requestedAmount}
+            setRequestedAmount={setRequestedAmount}
+            duration={duration}
+            setDuration={setDuration}
+            maxLoanAmount={maxLoanAmount}
+            collateralTypes={collateralTypes}
+            loading={loading}
+            onAddCollateral={handleAddCollateral}
+            onCalculateMaxLoan={calculateMaxLoan}
+          />
+        </div>        <div className={styles.wrapThirdContent}>
+          <TabContainer 
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            gridColumns={3}
+          >              {activeTab === "Collateral" && (
+                <div className={`${styles.loanContainer} ${isDarkMode ? styles.dark : ""}`}>
                   <table className={styles.loanTable}>
                     <thead>
                       <tr>
@@ -801,10 +691,8 @@ export const MyLoanPage = () => {
                     </tbody>
                   </table>
                 </div>
-              )}
-
-              {activeTab === "Loans" && (
-                <div className={styles.loanContainer}>
+              )}              {activeTab === "Loans" && (
+                <div className={`${styles.loanContainer} ${isDarkMode ? styles.dark : ""}`}>
                   <table className={styles.loanTable}>
                     <thead>
                       <tr>
@@ -1027,10 +915,8 @@ export const MyLoanPage = () => {
                     </tbody>
                   </table>
                 </div>
-              )}
-
-              {activeTab === "Auctions" && ( 
-                <div className={styles.loanContainer}>
+              )}              {activeTab === "Auctions" && ( 
+                <div className={`${styles.loanContainer} ${isDarkMode ? styles.dark : ""}`}>
                   <table className={styles.loanTable}>
                     <thead>
                       <tr>
@@ -1085,10 +971,8 @@ export const MyLoanPage = () => {
                       )}
                     </tbody>
                   </table>
-                </div>
-              )}
-            </div>
-          </div>
+                </div>              )}
+            </TabContainer>
         </div>
       </div>
     </div>

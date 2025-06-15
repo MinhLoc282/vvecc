@@ -6,18 +6,20 @@ import useTheme from "../../hooks/useTheme";
 export const HeroSection = () => {
   const { theme } = useTheme({});
 
+  const isDarkMode = theme === "dark";
+
   return (
     <div className={styles.heroSection}>
-      {theme === "dark" ? <div className={styles.gridOverlay} /> : null}
+      {isDarkMode ? <div className={styles.gridOverlay} /> : null}
       <div className={styles.container}>
         <div className={styles.content}>
           <h1 className={styles.title}>
-            Unlock Liquidity from Your Equity Holdings
+            Unlock Liquidity From Your Equity Holdings
           </h1>
-          <p className={styles.description}>
+          <div className={styles.description}>
             VECC is a decentralized platform that enables securities-based
             lending through tokenized collateral and free-market loan auctions.
-          </p>
+          </div>
           <div className={styles.buttonContainer}>
             <div size="lg" className={styles.primaryButton}>
               Get Started

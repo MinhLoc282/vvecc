@@ -1,20 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import {
-  ArrowRight,
-  ArrowUpRight,
-  Briefcase,
-  LineChart,
-  Share,
-} from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Button,
   Typography,
   Box,
@@ -26,13 +12,14 @@ import {
   InputLabel,
   CircularProgress,
 } from "@mui/material";
-import { ShareCard } from "../ShareCard/ShareCard";
-import { CollateralTable } from "../CollateralTable/CollateralTable";
-import { ActiveTable } from "../ActiveTable/ActiveTable";
 import { useAuth } from "../../hooks/use-auth-client";
+import { NFTCard } from "../NFTCard";
 import { BigNumber } from "ethers";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { TabContainer } from "../TabContainer";
+import useTheme from "../../hooks/useTheme";
+import { HowVeccWorks } from "../HowVeccWorks";
 export const TabLoan = () => {
   const tabs = [
     { id: "marketplace", label: "Loan Marketplace" },
@@ -85,6 +72,8 @@ export const TabLoan = () => {
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -236,240 +225,160 @@ export const TabLoan = () => {
   };
 
   return (
-    <div className={styles.wrapTabContainer}>
-      <div className={styles.wrapTab}>
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={`${styles.tab} ${
-              activeTab === tab.id ? styles.active : styles.inactive
-            }`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </div>
-        ))}
-      </div>
-      <div className={styles.wrapContent}>
+    <div>
+      <TabContainer
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        gridColumns={3}
+      >
         {activeTab === "marketplace" && (
           <div className={styles.tab}>
             <div className={styles.wrapShare}>
               {listings.map((item, index) => (
-                <div className={styles.shareCard}>
-                  <div className={styles.shareCardHeader}>
-                    <h3 className={styles.title}>{item.title}</h3>
-                    <div
-                      className={`${
-                        item.status == "Public" ? styles.public : styles.private
-                      }`}
-                    >
-                      {item.status}
-                    </div>
-                  </div>
-                  <p className={styles.companyName}>{item.company}</p>
-
-                  <div className={styles.shareInfo}>
-                    <div className={styles.info}>
-                      Quantity: <span>{item.quantity} shares</span>
-                    </div>
-                    <div className={styles.info}>
-                      Value: <span>${item.value}</span>
-                    </div>
-                    <div className={styles.info}>
-                      Min. Interest<span>{item.interest}% APR</span>
-                    </div>
-                    <div className={styles.info}>
-                      Loan Term: <span>{item.term} days</span>
-                    </div>
-                  </div>
-
-                  <div
-                    className={styles.placeBid}
-                    onClick={() => handleAAPLClick(item.stockName)}
-                  >
-                    Place Bid
-                  </div>
-                  <Modal open={openModal} onClose={handleCloseModal}>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        width: 400,
-                        backgroundColor: "white",
-                        padding: 3,
-                        borderRadius: 2,
-                        boxShadow: 24,
-                      }}
-                    >
-                      <Typography variant="h6">
-                        Request Loan for {selectedCollateral?.stockName}
-                      </Typography>
-                      <TextField
-                        label="Interest Rate (%)"
-                        type="number"
-                        value={interestRate}
-                        onChange={handleInterestRateChange}
-                        fullWidth
-                        required
-                        inputProps={{ min: 0.1, max: 40, step: 0.1 }}
-                        error={!!interestRateError}
-                        helperText={interestRateError}
-                        sx={{ marginBottom: 2 }}
-                      />
-                      <TextField
-                        label="Loan Amount"
-                        type="number"
-                        value={loanAmount}
-                        onChange={(e) =>
-                          setLoanAmount(parseFloat(e.target.value))
-                        }
-                        fullWidth
-                        required
-                        inputProps={{ max: selectedCollateral?.quantity }}
-                        sx={{ marginBottom: 2 }}
-                      />
-                      <FormControl fullWidth sx={{ marginBottom: 2 }}>
-                        <InputLabel>Duration</InputLabel>
-                        <Select
-                          value={duration}
-                          onChange={(e) => setDuration(e.target.value)}
-                          label="Duration"
-                        >
-                          <MenuItem value={6}>6 Months</MenuItem>
-                          <MenuItem value={8}>8 Months</MenuItem>
-                          <MenuItem value={12}>12 Months</MenuItem>
-                          <MenuItem value={12}>1 Year</MenuItem>
-                          <MenuItem value={18}>1.5 Years</MenuItem>
-                          <MenuItem value={24}>2 Years</MenuItem>
-                        </Select>
-                      </FormControl>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          gap: 2,
-                        }}
-                      >
-                        <Button
-                          variant="outlined"
-                          sx={{ color: "#236cb2", borderColor: "#236cb2" }}
-                          onClick={handleCloseModal}
-                        >
-                          Cancel
-                        </Button>
-                        {!isApproved ? (
-                          <Button
-                            variant="contained"
-                            sx={{ backgroundColor: "#236cb2" }}
-                            onClick={handleApprove}
-                            disabled={loanAmount <= 0 || loadingApprove}
-                          >
-                            {loadingApprove ? (
-                              <CircularProgress
-                                size={24}
-                                sx={{ color: "white" }}
-                              />
-                            ) : (
-                              "Approve"
-                            )}
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            sx={{ backgroundColor: "#236cb2" }}
-                            onClick={handleSubmitLoanRequest}
-                            disabled={
-                              !!interestRateError ||
-                              loanAmount <= 0 ||
-                              loadingSubmit
-                            }
-                          >
-                            {loadingSubmit ? (
-                              <CircularProgress
-                                size={24}
-                                sx={{ color: "white" }}
-                              />
-                            ) : (
-                              "Submit"
-                            )}
-                          </Button>
-                        )}
-                      </Box>
-                    </Box>
-                  </Modal>
-                </div>
+                <NFTCard
+                  key={index}
+                  title={item.title}
+                  subtitle={item.company}
+                  status={item.status}
+                  metadata={[
+                    { label: "Quantity", value: `${item.quantity} shares` },
+                    { label: "Value", value: `$${item.value.toLocaleString()}` },
+                    { label: "Min. Interest", value: `${item.interest}% APR` },
+                    { label: "Loan Term", value: `${item.term} days` }
+                  ]}
+                  actionText="Place Bid"
+                  onAction={() => handleAAPLClick(item.stockName)}
+                  variant="default"
+                  className="gridItem"
+                />
               ))}
             </div>
-            <div className={styles.viewAll} onClick={() => handleNavigate("/loan-marketplace")}>
-              <p className={styles.viewButton}>
-                View All Listings
-                <ArrowUpRight className={styles.arrowIcon} />
+            <div
+              className={styles.viewAll}
+              onClick={() => handleNavigate("/loan-marketplace")}
+            >
+              <p className={`${styles.viewButton} ${isDarkMode ? styles.dark : ""}`}>
+                View All
               </p>
             </div>
           </div>
         )}
-        {activeTab === "collateral" && (
-          // <div className={styles.wrapCol}>
-          //   <div className={styles.wrapIcon}>
-          //     <Briefcase className={styles.IconBrief} />
-          //   </div>
-          //   <h3 className={styles.titleCol}>No Collateral Added Yet</h3>
-          //   <p className={styles.contentCol}>
-          //     Add your public or private equity holdings as collateral to start
-          //     borrowing against your assets.
-          //   </p>
-          //   <div className={styles.primaryButton}>Add Collateral</div>
-          // </div>
-          <CollateralTable />
-        )}
-        {activeTab === "loans" && (
-          // <div className={styles.wrapCol}>
-          //   <div className={styles.wrapIcon}>
-          //     <LineChart className={styles.IconBrief} />
-          //   </div>
-          //   <h3 className={styles.titleCol}>No Active Loans</h3>
-          //   <p className={styles.contentCol}>
-          //     You don't have any active loans. Browse the marketplace to find
-          //     borrowers or add collateral to start borrowing.
-          //   </p>
-          //   <div className={styles.wrapButton}>
-          //     <div className={styles.browButton}>Browse Marketplace</div>
-          //     <div className={styles.primaryButton}>Add Collateral</div>
-          //   </div>
-          // </div>
-          <ActiveTable />
-        )}
-      </div>
-      <div className={styles.wrapVECC}>
-        <h2 className={styles.textWork}>How VECC Works</h2>
-        <div className={styles.wrapWork}>
-          <div className={styles.wrapBox}>
-            <h3 className={styles.title}>Collateralize Assets</h3>
-            <p className={styles.content}>
-              Tokenize and pledge your public or private equity holdings as
-              collateral to access liquidity without selling your assets.
-            </p>
-          </div>
-
-          <div className={styles.wrapBox}>
-            <h3 className={styles.title}>Participate in Auctions</h3>
-            <p className={styles.content}>
-              Lenders compete in free-market loan auctions to offer the best
-              rates, creating a transparent and efficient marketplace.
-            </p>
-          </div>
-
-          <div className={styles.wrapBox}>
-            <h3 className={styles.title}>Trade Loan NFTs</h3>
-            <p className={styles.content}>
-              Loan positions are tokenized as NFTs that can be traded on the
-              secondary market, providing additional liquidity options.
-            </p>
-          </div>
-        </div>
-      </div>
+      </TabContainer>
+      
+      {/* Modal placed outside TabContainer */}
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            backgroundColor: "white",
+            padding: 3,
+            borderRadius: 2,
+            boxShadow: 24,
+          }}
+        >
+          <Typography variant="h6">
+            Request Loan for {selectedCollateral?.stockName}
+          </Typography>
+          <TextField
+            label="Interest Rate (%)"
+            type="number"
+            value={interestRate}
+            onChange={handleInterestRateChange}
+            fullWidth
+            required
+            inputProps={{ min: 0.1, max: 40, step: 0.1 }}
+            error={!!interestRateError}
+            helperText={interestRateError}
+            sx={{ marginBottom: 2 }}
+          />
+          <TextField
+            label="Loan Amount"
+            type="number"
+            value={loanAmount}
+            onChange={(e) =>
+              setLoanAmount(parseFloat(e.target.value))
+            }
+            fullWidth
+            required
+            inputProps={{ max: selectedCollateral?.quantity }}
+            sx={{ marginBottom: 2 }}
+          />
+          <FormControl fullWidth sx={{ marginBottom: 2 }}>
+            <InputLabel>Duration</InputLabel>
+            <Select
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              label="Duration"
+            >
+              <MenuItem value={6}>6 Months</MenuItem>
+              <MenuItem value={8}>8 Months</MenuItem>
+              <MenuItem value={12}>12 Months</MenuItem>
+              <MenuItem value={12}>1 Year</MenuItem>
+              <MenuItem value={18}>1.5 Years</MenuItem>
+              <MenuItem value={24}>2 Years</MenuItem>
+            </Select>
+          </FormControl>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 2,
+            }}
+          >
+            <Button
+              variant="outlined"
+              sx={{ color: "#236cb2", borderColor: "#236cb2" }}
+              onClick={handleCloseModal}
+            >
+              Cancel
+            </Button>
+            {!isApproved ? (
+              <Button
+                variant="contained"
+                sx={{ backgroundColor: "#236cb2" }}
+                onClick={handleApprove}
+                disabled={loanAmount <= 0 || loadingApprove}
+              >
+                {loadingApprove ? (
+                  <CircularProgress
+                    size={24}
+                    sx={{ color: "white" }}
+                  />
+                ) : (
+                  "Approve"
+                )}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                sx={{ backgroundColor: "#236cb2" }}
+                onClick={handleSubmitLoanRequest}
+                disabled={
+                  !!interestRateError ||
+                  loanAmount <= 0 ||
+                  loadingSubmit
+                }
+              >
+                {loadingSubmit ? (
+                  <CircularProgress
+                    size={24}
+                    sx={{ color: "white" }}
+                  />
+                ) : (
+                  "Submit"
+                )}
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Modal>
+      
+      <HowVeccWorks />
     </div>
   );
 };

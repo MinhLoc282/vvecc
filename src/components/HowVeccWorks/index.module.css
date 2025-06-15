@@ -1,0 +1,187 @@
+/* Main container - matching other pages pattern */
+.wrapVECC {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+@media (min-width: 1400px) {
+  .wrapVECC {
+    max-width: 1400px;
+  }
+}
+
+/* Header section */
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.textWork {
+  font-weight: 700;
+  font-size: 1.875rem; /* Reduced from 2.5rem to match other titles */
+  line-height: 1.2;
+  color: black;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #236cb2, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: black;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Grid layout */
+.wrapWork {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .wrapWork {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+/* Card styling - Minimalist approach */
+.wrapBox {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.wrapBox::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #236cb2, #2563eb, #3b82f6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.wrapBox:hover::before {
+  opacity: 1;
+}
+
+.wrapBox:hover {
+  transform: translateY(-8px);
+  border-color: #236cb2;
+  box-shadow: 0 20px 40px rgba(35, 108, 178, 0.1);
+}
+
+/* Icon styling */
+.iconWrapper {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #236cb2, #2563eb);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.wrapBox:hover .iconWrapper {
+  transform: scale(1.1);
+  box-shadow: 0 8px 25px rgba(35, 108, 178, 0.3);
+}
+
+/* Typography */
+.title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: black;
+  margin-bottom: 16px;
+  letter-spacing: -0.025em;
+}
+
+.content {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* Dark mode support */
+.wrapVECC.dark .textWork {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: white;
+}
+
+.wrapVECC.dark .wrapBox {
+  background: rgba(4, 18, 53, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.wrapVECC.dark .wrapBox:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 20px 40px rgba(96, 165, 250, 0.15);
+}
+
+.wrapVECC.dark .iconWrapper {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+
+.wrapVECC.dark .title {
+  color: white;
+}
+
+.wrapVECC.dark .subtitle {
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .textWork {
+    font-size: 1.5rem; /* Further reduced for mobile */
+  }
+
+  .wrapWork {
+    gap: 24px;
+  }
+
+  .wrapBox {
+    padding: 28px 20px;
+  }
+
+  .iconWrapper {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 20px;
+  }
+
+  .icon {
+    width: 28px;
+    height: 28px;
+  }
+}

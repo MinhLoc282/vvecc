@@ -1,0 +1,1 @@
+export { AuthPageNavbar } from "./AuthPageNavbar";

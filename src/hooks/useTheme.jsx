@@ -75,11 +75,8 @@ function useTheme({ init = false }) {
         case "dark":
           selectDark();
           break;
-        case "system":
-          selectSystem();
-          break;
         default:
-          selectSystem();
+          selectLight();
           break;
       }
 

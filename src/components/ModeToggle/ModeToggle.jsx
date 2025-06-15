@@ -1,44 +1,43 @@
-import React from "react";
+import { Sun } from "lucide-react";
 import useClickOutSide from "../../hooks/useClickOutSide";
-import styles from "./index.module.css";
 import useTheme from "../../hooks/useTheme";
-import { Moon, Sun } from "lucide-react";
+import styles from "./index.module.css";
 
 export const ModeToggle = () => {
   const { theme, selectDark, selectLight, selectSystem } = useTheme({});
+  const isDarkMode = theme === "dark";
   const { show, setShow, nodeRef } = useClickOutSide();
+
+  const themeOptions = [
+    { label: "Light", onClick: selectLight, ariaLabel: "Select Light Mode" },
+    { label: "Dark", onClick: selectDark, ariaLabel: "Select Dark Mode" },
+  ];
+
   return (
     <div
-      className={`${styles.container} ${theme === "dark" ? "dark" : ""}`}
+      className={`${styles.container} ${isDarkMode ? styles.dark : ""}`}
       ref={nodeRef}
     >
-      <button className={styles.buttonToggle} onClick={() => setShow(!show)}>
+      <button 
+        className={styles.buttonToggle} 
+        onClick={() => setShow(!show)}
+        aria-label="Toggle theme"
+      >
         <Sun className={`${styles.icon} ${styles.sun}`} />
-        <Moon className={`${styles.icon} ${styles.moon}`} />
       </button>
+      
       {show && (
         <div className={styles.dropdown}>
-          <button
-            className={styles.buttonToggleIcon}
-            onClick={selectLight}
-            aria-label="Select Light Mode"
-          >
-            Light
-          </button>
-          <button
-            className={styles.buttonToggleIcon}
-            onClick={selectDark}
-            aria-label="Select Dark Mode"
-          >
-            Dark
-          </button>
-          <button
-            className={styles.buttonToggleIcon}
-            onClick={selectSystem}
-            aria-label="Select System Mode"
-          >
-            System
-          </button>
+          {themeOptions.map(({ label, onClick, ariaLabel }) => (
+            <button
+              key={label}
+              className={styles.buttonToggleIcon}
+              onClick={onClick}
+              aria-label={ariaLabel}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       )}
     </div>

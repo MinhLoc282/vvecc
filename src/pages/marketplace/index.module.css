@@ -4,6 +4,7 @@
   margin-left: auto;
   padding: 16px 32px;
   min-height: 100vh;
+  background-color: #eef0f3;
 }
 @media (min-width: 1400px) {
   .wrapContainer {
@@ -255,4 +256,111 @@
 }
 .option {
   padding-left: 30px;
+}
+
+/* Dark Mode Styling */
+.wrapContainer.dark {
+  background-color: #041235;
+  color: #e2e8f0;
+}
+
+.dark .title {
+  color: #ffffff;
+}
+
+.dark .subtitle {
+  color: #a0aec0;
+}
+
+.dark .primaryButton {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.dark .primaryButton:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+.dark .wrapSecondContent {
+  background-color: #1a202c;
+  border-color: #2d3748;
+  color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dark .input {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark .input::placeholder {
+  color: #a0aec0;
+}
+
+.dark .input:focus-visible {
+  box-shadow: 0 0 0 2px #4c9aff, 0 0 0 4px transparent;
+  border-color: #4c9aff;
+}
+
+.dark .iconSearch {
+  color: #a0aec0;
+}
+
+.dark .buttonFilter {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark .buttonFilter:hover {
+  background-color: #374151;
+  border-color: #6b7280;
+}
+
+.dark .iconFilter {
+  color: #a0aec0;
+}
+
+/* Select Component Dark Mode */
+.dark .selectButton {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.dark .selectButton:hover {
+  background-color: #374151;
+  border-color: #6b7280;
+}
+
+.dark .iconChevron {
+  color: #a0aec0;
+}
+
+.dark .dropdown {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dark .option {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+
+.dark .option:hover {
+  background-color: #374151;
+  color: #ffffff;
+}
+
+.dark .selected {
+  background-color: #374151;
+  color: #ffffff;
+}
+
+.dark .iconCheck {
+  color: #4c9aff;
 }
