@@ -1,63 +1,64 @@
-import React, { useEffect, useState } from "react";
-import { Link, useOutletContext, useLocation } from "react-router-dom";
-import Logo from "../../assets/logo.png";
-import { useAuth } from "../../hooks/use-auth-client";
-
-import { ModeToggle } from "../../components/ModeToggle/ModeToggle";
+import { useLocation } from "react-router-dom";
+import Loading from "../../components/Loading/Loading";
 import styles from "./index.module.css";
-import { Logout } from "../../components/Logout/Logout";
+import {
+  WalletConnectionModal,
+  NavigationLinks,
+  AuthSection,
+  NavbarLogo,
+  AuthPageNavbar,
+} from "../../components";
+import useTheme from "../../hooks/useTheme";
+import { useWalletConnection } from "../../hooks/navbar/useWalletConnection";
 
 export default function Navbar() {
-  const { isAuthenticated, login, isAdmin, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { theme } = useTheme({});
 
-  useEffect(() => {
-    login();
-    logout();
-  }, []);
+  const isDarkMode = theme === "dark";
 
-  const isActiveLink = (path) => {
-    return location.pathname === path;
-  };
+  const {
+    showWalletModal,
+    isConnecting,
+    registeredWallet,
+    isProcessingConnection,
+    isLoadingWalletInfo,
+    isLogin,
+    handleConnectWallet,
+  } = useWalletConnection();
+
+  const isAuthPage =
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/kyc";
+
+  // Show loading when checking wallet info
+  if (isLoadingWalletInfo && isLogin && !isAuthPage) {
+    return <Loading />;
+  }
+
+  if (isAuthPage) {
+    return <AuthPageNavbar />;
+  }
 
   return (
-    <div className={styles.navbar}>
+    <div className={`${styles.navbar} ${isDarkMode ? styles.dark : ""}`}>
       <div className={styles.container}>
-        <div className={styles.navbarContentFirst}>
-          <Link to="/" className={styles.logo}>
-            <img className={styles.logo} src={Logo} alt="logo" />
-          </Link>
-
-          <nav className={styles.navLinks}>
-            <Link to="/dashboard" className={`${styles.navItem} ${isActiveLink('/dashboard') ? styles.activeNavItem : ''}`}>
-              Dashboard
-            </Link>
-            <Link to="/loan-marketplace" className={`${styles.navItem} ${isActiveLink('/loan-marketplace') ? styles.activeNavItem : ''}`}>
-              Marketplace
-            </Link>
-            <Link to="/nft-marketplace" className={`${styles.navItem} ${isActiveLink('/nft-marketplace') ? styles.activeNavItem : ''}`}>
-              NFT Marketplace
-            </Link>
-            <Link to="/my-loan" className={`${styles.navItem} ${isActiveLink('/my-loan') ? styles.activeNavItem : ''}`}>
-              My Loans
-            </Link>
-            
-          
-          </nav>
-        </div>
-
-        <div className={styles.navbarContentSecond}>
-          <ModeToggle />
-          {isAuthenticated ? (
-            <Logout />
-          ) : (
-            <div className={styles.buttonConnect} onClick={login}>
-              Connect
-            </div>
-          )}
-        </div>
+        <NavbarLogo />
+        <NavigationLinks />
+        <AuthSection isLogin={isLogin} />
       </div>
+
+      <WalletConnectionModal
+        showWalletModal={showWalletModal}
+        isLogin={isLogin}
+        isAuthPage={isAuthPage}
+        registeredWallet={registeredWallet}
+        isProcessingConnection={isProcessingConnection}
+        isConnecting={isConnecting}
+        handleConnectWallet={handleConnectWallet}
+      />
     </div>
   );
 }

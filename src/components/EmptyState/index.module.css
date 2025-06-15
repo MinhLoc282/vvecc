@@ -1,0 +1,449 @@
+/* EmptyState Component Styles */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 400px;
+  padding: 48px 24px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+/* Variants */
+.emptyState.compact {
+  min-height: 300px;
+  padding: 32px 16px;
+}
+
+.emptyState.large {
+  min-height: 500px;
+  padding: 64px 32px;
+}
+
+/* Dark mode adjustments */
+.emptyState.dark {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+/* Content Container */
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  gap: 24px;
+}
+
+/* Icon Section */
+.iconContainer {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.iconWrapper {
+  position: relative;
+  z-index: 2;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  color: #3b82f6;
+  transition: all 0.3s ease;
+}
+
+.defaultIcon {
+  width: 40px;
+  height: 40px;
+  color: #3b82f6;
+  opacity: 0.7;
+}
+
+/* Icon background animation */
+.iconBackground {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.05) 50%,
+    transparent 70%
+  );
+  transform: translate(-50%, -50%);
+  animation: pulse 3s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Dark mode icon adjustments */
+.emptyState.dark .iconWrapper {
+  background-color: #374151;
+}
+
+.emptyState.dark .icon,
+.emptyState.dark .defaultIcon {
+  color: #60a5fa;
+}
+
+.emptyState.dark .iconBackground {
+  background: radial-gradient(
+    circle at center,
+    rgba(96, 165, 250, 0.1) 0%,
+    rgba(96, 165, 250, 0.05) 50%,
+    transparent 70%
+  );
+}
+
+.emptyState.dark .title {
+  color: #f9fafb;
+}
+
+.emptyState.dark .description {
+  color: #9ca3af;
+}
+
+.emptyState.dark:hover .iconWrapper {
+  background-color: rgba(55, 65, 81, 0.8);
+}
+
+.emptyState.dark:hover .icon,
+.emptyState.dark:hover .defaultIcon {
+  color: #60a5fa;
+}
+
+.emptyState.dark .secondaryButton:hover:not(:disabled) {
+  background-color: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+/* Text Content */
+.textContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #6b7280;
+  margin: 0;
+  max-width: 420px;
+  word-wrap: break-word;
+}
+
+/* Actions Section */
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  height: 44px;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  min-width: 120px;
+  gap: 8px;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.primaryButton {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: 1px solid #2563eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.secondaryButton {
+  background-color: #ffffff;
+  color: #3b82f6;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #374151;
+  border-color: #e2e8f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode button adjustments */
+.emptyState.dark .primaryButton {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.emptyState.dark .primaryButton:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.emptyState.dark .secondaryButton {
+  background-color: #1f2937;
+  color: #60a5fa;
+  border-color: #374151;
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .emptyState {
+    min-height: 350px;
+    padding: 32px 16px;
+  }
+  
+  .emptyState.compact {
+    min-height: 250px;
+    padding: 24px 12px;
+  }
+  
+  .emptyState.large {
+    min-height: 400px;
+    padding: 40px 20px;
+  }
+  
+  .content {
+    gap: 20px;
+  }
+  
+  .iconWrapper {
+    width: 72px;
+    height: 72px;
+  }
+  
+  .icon,
+  .defaultIcon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .iconBackground {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .description {
+    font-size: 0.875rem;
+  }
+  
+  .actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .button {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .emptyState {
+    min-height: 300px;
+    padding: 24px 12px;
+  }
+  
+  .content {
+    gap: 16px;
+  }
+  
+  .iconWrapper {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .icon,
+  .defaultIcon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .title {
+    font-size: 1.125rem;
+  }
+  
+  .description {
+    font-size: 0.8rem;
+  }
+  
+  .button {
+    height: 40px;
+    padding: 10px 20px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Compact variant specific styles */
+.compact .content {
+  gap: 20px;
+}
+
+.compact .iconWrapper {
+  width: 72px;
+  height: 72px;
+}
+
+.compact .icon,
+.compact .defaultIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.compact .title {
+  font-size: 1.25rem;
+}
+
+.compact .description {
+  font-size: 0.875rem;
+}
+
+/* Large variant specific styles */
+.large .content {
+  gap: 32px;
+}
+
+.large .iconWrapper {
+  width: 104px;
+  height: 104px;
+}
+
+.large .icon,
+.large .defaultIcon {
+  width: 48px;
+  height: 48px;
+}
+
+.large .title {
+  font-size: 1.75rem;
+}
+
+.large .description {
+  font-size: 1.125rem;
+}
+
+/* Hover effects for the entire component */
+.emptyState:hover .iconWrapper {
+  transform: scale(1.05);
+  background-color: rgba(241, 245, 249, 0.8);
+}
+
+.emptyState:hover .icon,
+.emptyState:hover .defaultIcon {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+/* Focus states for accessibility */
+.button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .emptyState {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .iconBackground {
+    display: none;
+  }
+  
+  .button {
+    display: none;
+  }
+}

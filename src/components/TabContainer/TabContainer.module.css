@@ -1,0 +1,90 @@
+/* TabContainer Component Styles */
+
+.wrapTabContainer {
+  display: flex;
+  gap: 28px;
+  flex-direction: column;
+}
+
+/* Light mode styles (default) */
+.wrapTab {
+  padding: 0 4px;
+  background-color: white; /* Nền trắng cho light mode */
+  border-radius: 50px; /* Bo tròn hoàn toàn */
+  display: grid;
+  place-items: center; /* Căn giữa hoàn toàn cả ngang và dọc */
+  width: 100%;
+  height: 44px;
+  cursor: pointer;
+}
+
+/* Dark mode styles */
+.wrapTab.dark {
+  background-color: #222e4d; /* Nền tối cho dark mode */
+}
+
+/* Active tab - Light mode */
+.active {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50px; /* Bo tròn hoàn toàn */
+  white-space: nowrap;
+  color: rgba(4, 18, 53, 1); /* Text active */
+  background-color: #A7CDEF; /* Nền active */
+  width: 100%;
+  height: 36px; /* Height cố định */
+  transition: all 0.2s ease;
+}
+
+/* Active tab - Dark mode (giữ nguyên màu) */
+.active.dark {
+  color: rgba(4, 18, 53, 1); /* Text active giữ nguyên */
+  background-color: #A7CDEF; /* Nền active giữ nguyên */
+}
+
+/* Inactive tab - Light mode */
+.inactive {
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: white; /* Nền không active - light mode */
+  border-radius: 50px; /* Bo tròn hoàn toàn */
+  white-space: nowrap;
+  color: rgba(0, 0, 0, 0.5); /* Text không active - light mode */
+  height: 36px; /* Height cố định */
+  transition: all 0.2s ease;
+}
+
+/* Inactive tab - Dark mode */
+.inactive.dark {
+  background-color: inherit; /* Nền không active - dark mode */
+  color: rgba(255, 255, 255, 0.5); /* Text không active - dark mode */
+}
+
+.inactive:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+.tab {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrapContent {
+  width: 100%;
+  background-color: transparent;
+}

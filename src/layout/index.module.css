@@ -1,4 +1,8 @@
 .Outlet {
   margin-top: 0px;
-  background: hsl(var(--background));
+  background-color: #eef0f3;
+}
+
+.Outlet.dark {
+  background-color: #041235;
 }

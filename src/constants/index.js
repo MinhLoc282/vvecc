@@ -8,6 +8,10 @@ export const LOCATION = {
   LOAN_DETAILS: '/loan-details',
   USER_DASHBOARD: '/dashboard',
   MY_LOAN: '/my-loan',
+  LOGIN: '/login',
+  REGRISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  KYC: '/kyc',
 
   ADMIN_USER_MANAGEMENT: '/admin-user-management',
 };

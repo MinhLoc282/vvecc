@@ -1,47 +1,845 @@
 .loanContainer {
   overflow-x: auto; /* Hỗ trợ cuộn ngang */
+  background-color: #ffffff;
 }
 
 .loanTable {
   width: 100%;
-
   border-collapse: separate; /* Đảm bảo border-radius hoạt động */
   border-spacing: 0; /* Loại bỏ khoảng trống giữa các ô */
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
   table-layout: initial;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .loanTable th,
 .loanTable td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-  color: hsl(var(--primary));
+  padding: 16px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1f2937;
   text-align: left;
   white-space: nowrap; /* Ngăn ngừa xuống dòng */
+  transition: background-color 0.2s ease;
 }
 
 .loanTable tr:last-child td {
   border-bottom: none;
 }
+
+.loanTable tr:hover td {
+  background-color: #f1f5f9;
+}
+
+.loanTable tr:hover td:first-child {
+  background-color: #f1f5f9;
+}
+
+.loanTable tr:hover td:last-child {
+  background-color: #f1f5f9;
+}
+
 .loanTable th {
-  color: hsl(var(--muted-foreground));
-  font-weight: 500;
+  background-color: #f8fafc;
+  color: #6b7280;
+  font-weight: 600;
   font-size: 14px;
+  line-height: 1.4;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.loanTable th:first-child {
+  border-top-left-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.loanTable th:last-child {
+  border-top-right-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.loanTable tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+  background-color: #ffffff;
+}
+
+.loanTable tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+  background-color: #ffffff;
 }
 
 .loanButton {
-  background-color: #236cb2;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  height: 2.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #000000;
+  color: #ffffff;
   border: none;
-  padding: 8px 12px;
   cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s ease;
+  min-width: 100px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .loanButton:hover {
-  background-color: #1a4e89;
+  background-color: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.loanButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode table styling - Using direct color values */
+.loanContainer.dark {
+  background-color: #0f1419;
+}
+
+.loanContainer.dark .loanTable {
+  background-color: #1a202c;
+  border-color: #2d3748;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.loanContainer.dark .loanTable th {
+  background-color: #2d3748;
+  color: #a0aec0;
+  border-bottom-color: #4a5568;
+}
+
+.loanContainer.dark .loanTable th,
+.loanContainer.dark .loanTable td {
+  border-bottom-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.loanContainer.dark .loanTable tr:hover td {
+  background-color: #2d3748;
+}
+
+/* Dark mode corner cell styling to fix brightness issues */
+.loanContainer.dark .loanTable th:first-child,
+.loanContainer.dark .loanTable th:last-child {
+  background-color: #2d3748;
+}
+
+.loanContainer.dark .loanTable tr:last-child td:first-child,
+.loanContainer.dark .loanTable tr:last-child td:last-child {
+  background-color: #1a202c;
+}
+
+.loanContainer.dark .loanTable tr:hover td:first-child,
+.loanContainer.dark .loanTable tr:hover td:last-child {
+  background-color: #2d3748;
+}
+
+.loanContainer.dark .loanButton {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.loanContainer.dark .loanButton:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+/* Modal Styles - Similar to BuyNFTModal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContainer {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 24px 0 24px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 20px;
+}
+
+.headerContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+}
+
+.iconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.headerIcon {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.titleSection {
+  flex: 1;
+  min-width: 0;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.modalSubtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.closeButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.closeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.closeIcon {
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+}
+
+/* Content */
+.modalContent {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Auction Preview Card */
+.auctionPreview {
+  background-color: rgba(241, 245, 249, 0.3);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.auctionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.auctionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: rgba(22, 101, 52, 0.1);
+  color: rgb(22, 101, 52);
+  border: 1px solid rgba(22, 101, 52, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.statusIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.auctionDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.detailLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Bid Input Section */
+.bidInputSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.bidInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #ffffff;
+  color: #1f2937;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.bidInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.bidInput::placeholder {
+  color: #9ca3af;
+}
+
+.inputHelper {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Bid History Section */
+.bidHistorySection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.bidHistoryTable {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRow:hover {
+  background-color: #f8fafc;
+}
+
+.tableCell {
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* Warning Notice */
+.warningNotice {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background-color: rgba(251, 191, 36, 0.05);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+}
+
+.warningIcon {
+  width: 20px;
+  height: 20px;
+  color: rgb(251, 191, 36);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warningText {
+  flex: 1;
+  min-width: 0;
+}
+
+.warningTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.warningDescription {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Footer */
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0 24px 24px 24px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+
+.cancelButton {
+  flex: 1;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #374151;
+  border-color: #e2e8f0;
+}
+
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirmButton {
+  flex: 2;
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.confirmButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+.confirmButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.buttonIcon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark mode adjustments */
+.modalOverlay.dark .modalContainer {
+  background-color: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modalOverlay.dark .modalHeader {
+  border-bottom-color: #374151;
+}
+
+.modalOverlay.dark .modalTitle {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .modalSubtitle {
+  color: #9ca3af;
+}
+
+.modalOverlay.dark .closeButton {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.modalOverlay.dark .closeButton:hover:not(:disabled) {
+  background-color: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+.modalOverlay.dark .closeIcon {
+  color: #9ca3af;
+}
+
+.modalOverlay.dark .auctionPreview {
+  background-color: rgba(55, 65, 81, 0.3);
+  border-color: #374151;
+}
+
+.modalOverlay.dark .auctionTitle {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .detailLabel {
+  color: #9ca3af;
+}
+
+.modalOverlay.dark .detailValue {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .statusBadge {
+  background-color: rgba(74, 222, 128, 0.1);
+  color: rgb(74, 222, 128);
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+.modalOverlay.dark .inputLabel {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .bidInput {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .bidInput:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.modalOverlay.dark .bidInput::placeholder {
+  color: #6b7280;
+}
+
+.modalOverlay.dark .inputHelper {
+  color: #9ca3af;
+}
+
+.modalOverlay.dark .sectionTitle {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .bidHistoryTable {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.modalOverlay.dark .tableHeader {
+  background-color: #1f2937;
+  border-bottom-color: #4b5563;
+  color: #d1d5db;
+}
+
+.modalOverlay.dark .tableRow {
+  border-bottom-color: #4b5563;
+}
+
+.modalOverlay.dark .tableRow:hover {
+  background-color: #1f2937;
+}
+
+.modalOverlay.dark .tableCell {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .warningNotice {
+  background-color: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.modalOverlay.dark .warningIcon {
+  color: rgb(251, 191, 36);
+}
+
+.modalOverlay.dark .warningTitle {
+  color: #f9fafb;
+}
+
+.modalOverlay.dark .warningDescription {
+  color: #9ca3af;
+}
+
+.modalOverlay.dark .modalFooter {
+  border-top-color: #374151;
+}
+
+.modalOverlay.dark .cancelButton {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+.modalOverlay.dark .cancelButton:hover:not(:disabled) {
+  background-color: #374151;
+  color: #e5e7eb;
+  border-color: #4b5563;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .modalOverlay {
+    padding: 16px;
+  }
+  
+  .modalContainer {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+  
+  .modalHeader {
+    padding: 20px 20px 0 20px;
+    padding-bottom: 16px;
+  }
+  
+  .headerContent {
+    gap: 12px;
+  }
+  
+  .iconWrapper {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .headerIcon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .modalTitle {
+    font-size: 1.25rem;
+  }
+  
+  .modalContent {
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .auctionPreview {
+    padding: 16px;
+  }
+  
+  .auctionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .auctionTitle {
+    font-size: 1rem;
+  }
+  
+  .modalFooter {
+    padding: 0 20px 20px 20px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .cancelButton {
+    flex: none;
+    order: 2;
+  }
+  
+  .confirmButton {
+    flex: none;
+    order: 1;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+}
+
+/* Đảm bảo bảng cuộn ngang khi màn hình nhỏ */
+@media screen and (max-width: 768px) {
+  .loanContainer {
+    overflow-x: auto;
+  }
+
+  .loanTable {
+    display: block;
+    width: max-content;
+  }
+
+  .loanTable th,
+  .loanTable td {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .loanButton {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    min-width: 80px;
+  }
 }
 
 /* Đảm bảo bảng cuộn ngang khi màn hình nhỏ */

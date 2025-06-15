@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { ethers } from 'ethers';
 import { EthereumProvider } from '@walletconnect/ethereum-provider';
+import { authService } from '../services/authService';
 import loanABI from '../constants/loan_abi.json'
 import loanNFTABI from '../constants/loan_nft_abi.json'
 import loanNFTMarketplaceABI from '../constants/loan_nft_marketplace_abi.json'
@@ -27,6 +28,122 @@ export const useAuthClient = () => {
   const [account, setAccount] = useState(null);
   const [contracts, setContracts] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  // Kiểm tra authentication status từ authService và tự động kết nối lại wallet
+  useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+    };
+    
+    checkAuth();
+    // Kiểm tra định kỳ nếu token bị expire
+    const interval = setInterval(checkAuth, 60000); // Kiểm tra mỗi phút
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-connect wallet on page load if user is authenticated
+  useEffect(() => {
+    const autoConnectWallet = async () => {
+      // Don't auto-connect if user is disconnecting or already has account
+      if (isAuthenticated && !account && !isDisconnecting) {
+        console.log("🔄 Attempting to auto-connect wallet after page reload...");
+        
+        // Check if we have a saved wallet type
+        const savedWalletType = localStorage.getItem('walletType');
+        if (!savedWalletType) {
+          console.log("❌ No saved wallet type found, skipping auto-connect");
+          return;
+        }
+        
+        // Additional check: Don't auto-connect if we just disconnected
+        const lastDisconnectTime = localStorage.getItem('lastDisconnectTime');
+        if (lastDisconnectTime) {
+          const timeSinceDisconnect = Date.now() - parseInt(lastDisconnectTime);
+          if (timeSinceDisconnect < 10000) { // 10 seconds
+            console.log("❌ Recently disconnected, skipping auto-connect for", (10000 - timeSinceDisconnect) / 1000, "more seconds");
+            return;
+          } else {
+            // Remove old disconnect timestamp
+            localStorage.removeItem('lastDisconnectTime');
+          }
+        }
+        
+        // Try MetaMask first if it was the saved type
+        if (savedWalletType === 'metamask' && window.ethereum) {
+          try {
+            // Check if already connected to MetaMask
+            const accounts = await window.ethereum.request({ 
+              method: 'eth_accounts' 
+            });
+            
+            if (accounts.length > 0) {
+              console.log("✅ Found existing MetaMask connection, restoring...");
+              const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+              
+              if (parseInt(chainId, 16) === 97) {
+                const ethersProvider = new ethers.providers.Web3Provider(window.ethereum);
+                const signerInstance = ethersProvider.getSigner();
+                
+                setProvider(ethersProvider);
+                setSigner(signerInstance);
+                await handleAccountConnection(accounts);
+                initializeContracts(signerInstance);
+                
+                console.log("✅ MetaMask auto-connection successful");
+                return;
+              }
+            } else {
+              console.log("❌ MetaMask has no connected accounts, clearing saved wallet type");
+              localStorage.removeItem('walletType');
+            }
+          } catch (error) {
+            console.log("❌ MetaMask auto-connect failed:", error);
+            localStorage.removeItem('walletType');
+          }
+        }
+        
+        // Try WalletConnect if it was the saved type
+        if (savedWalletType === 'walletconnect') {
+          try {
+            console.log("🔄 Attempting WalletConnect auto-reconnect...");
+            
+            let wcProviderInstance = wcProvider;
+            if (!wcProviderInstance) {
+              wcProviderInstance = await createWalletConnectProvider();
+            }
+            
+            if (wcProviderInstance && wcProviderInstance.connected) {
+              console.log("✅ Found existing WalletConnect session, restoring...");
+              
+              const ethersProvider = new ethers.providers.Web3Provider(wcProviderInstance);
+              const signerInstance = ethersProvider.getSigner();
+              
+              setProvider(ethersProvider);
+              setSigner(signerInstance);
+              await handleAccountConnection(wcProviderInstance.accounts);
+              initializeContracts(signerInstance);
+              
+              console.log("✅ WalletConnect auto-connection successful");
+            } else {
+              console.log("❌ WalletConnect session not found, clearing saved wallet type");
+              localStorage.removeItem('walletType');
+            }
+          } catch (error) {
+            console.log("❌ WalletConnect auto-connect failed:", error);
+            localStorage.removeItem('walletType');
+          }
+        }
+      }
+    };
+
+    // Delay auto-connect to ensure all components are initialized
+    const timeoutId = setTimeout(autoConnectWallet, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isAuthenticated, account, wcProvider, isDisconnecting]);
 
   // Initialize contracts
   const initializeContracts = (signerInstance) => {
@@ -55,6 +172,65 @@ export const useAuthClient = () => {
           icons: ['https://yourwebsite.com/logo.png']
         }
       });
+
+      // Listen for display_uri to detect when modal opens
+      wcProvider.on('display_uri', (uri) => {
+        console.log('WalletConnect modal opened');
+        
+        // Watch for modal close via DOM mutation
+        setTimeout(() => {
+          const checkForModal = () => {
+            const modalSelectors = [
+              'wcm-modal',
+              'w3m-modal', 
+              '[data-testid="w3m-modal"]',
+              '[data-testid="wcm-modal"]'
+            ];
+
+            let modalElement = null;
+            for (const selector of modalSelectors) {
+              modalElement = document.querySelector(selector);
+              if (modalElement) break;
+            }
+
+            if (modalElement) {
+              // Create observer to watch for modal removal
+              const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                  if (mutation.type === 'childList') {
+                    mutation.removedNodes.forEach((node) => {
+                      if (node.nodeType === Node.ELEMENT_NODE) {
+                        const isModal = modalSelectors.some(selector => {
+                          try {
+                            return (node.matches && node.matches(selector)) || 
+                                   (node.querySelector && node.querySelector(selector));
+                          } catch (e) {
+                            return false;
+                          }
+                        });
+                        
+                        if (isModal) {
+                          observer.disconnect();
+                        }
+                      }
+                    });
+                  }
+                });
+              });
+
+              observer.observe(document.body, {
+                childList: true,
+                subtree: true
+              });
+
+              // Store observer reference to clean up later
+              wcProvider._modalObserver = observer;
+            }
+          };
+
+          checkForModal();
+        }, 100);
+      });
       
       setWcProvider(wcProvider);
       return wcProvider;
@@ -69,12 +245,19 @@ export const useAuthClient = () => {
     if (accounts && accounts.length > 0) {
       const userAddress = accounts[0];
       setAccount(userAddress);
-      setIsAuthenticated(true);
-      setIsAdmin(checkIfAdmin(userAddress));
+            
+      // Note: Wallet connection to server is handled by Navbar component
+      // to prevent duplicate API calls and provide proper user feedback
+      
+      // Check admin status asynchronously
+      const adminStatus = await checkIfAdmin(userAddress);
+      setIsAdmin(adminStatus);
     } else {
       setAccount(null);
-      setIsAuthenticated(false);
       setIsAdmin(false);
+      
+      // Note: Wallet disconnection from server is handled by Navbar component
+      // or explicit logout actions
     }
   };
 
@@ -84,6 +267,9 @@ export const useAuthClient = () => {
       try {
         // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        // Save wallet type for auto-reconnect
+        localStorage.setItem('walletType', 'metamask');
         
         // Check network
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
@@ -120,9 +306,8 @@ export const useAuthClient = () => {
         await handleAccountConnection(accounts);
         initializeContracts(signerInstance);
         
-        // Setup event listeners
-        window.ethereum.on('accountsChanged', handleAccountConnection);
-        window.ethereum.on('chainChanged', () => window.location.reload());
+        // Note: Event listeners are setup in the global useEffect at the bottom
+        // to avoid duplicate listeners and ensure proper handling
         
         return true;
       } catch (error) {
@@ -136,7 +321,7 @@ export const useAuthClient = () => {
   };
 
   // Login function - Connect wallet
-  const login = async () => {
+  const login = useCallback(async () => {
     const metaMaskConnected = await connectMetaMask();
 
     if (!metaMaskConnected) {
@@ -147,6 +332,9 @@ export const useAuthClient = () => {
           wcProviderInstance = await createWalletConnectProvider();
           if (!wcProviderInstance) return;
         }
+        
+        // Save wallet type for auto-reconnect
+        localStorage.setItem('walletType', 'walletconnect');
         
         // Connect and display the modal
         const accounts = await wcProviderInstance.enable();
@@ -186,42 +374,228 @@ export const useAuthClient = () => {
         });
         
         wcProviderInstance.on('disconnect', () => {
-          setIsAuthenticated(false);
+          console.log("🔄 WalletConnect disconnected - performing full cleanup");
+          
+          // Mark disconnect time
+          localStorage.setItem('lastDisconnectTime', Date.now().toString());
+          
+          // Full cleanup
           setAccount(null);
           setSigner(null);
           setProvider(null);
           setContracts({});
+          setWcProvider(null);
+          
+          // Clear wallet storage
+          localStorage.removeItem('walletType');
+          localStorage.removeItem('walletconnect');
+          localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+          sessionStorage.removeItem('walletconnect');
+          sessionStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+          
+          // Set disconnecting flag to prevent auto-reconnect
+          setIsDisconnecting(true);
+          setTimeout(() => {
+            setIsDisconnecting(false);
+          }, 3000);
         });
       } catch (error) {
         console.error('WalletConnect login failed:', error);
+        
+        // Check if user closed modal or rejected connection
+        if (error.message && (
+          error.message.includes('User rejected') || 
+          error.message.includes('User closed modal') ||
+          error.message.includes('Connection request reset') ||
+          error.message.includes('Modal closed') ||
+          error.code === 4001 || // User rejected the request
+          error.code === -32000 // User closed modal
+        )) {
+          console.log('ĐÃ TẮT');
+        }
+        
+        // Clean up modal observer if it exists
+        if (wcProviderInstance && wcProviderInstance._modalObserver) {
+          wcProviderInstance._modalObserver.disconnect();
+          delete wcProviderInstance._modalObserver;
+        }
       }
     }
-  };
+  }, [wcProvider]);
 
   // Logout function
   const logout = async () => {
-    if (wcProvider) {
-      try {
-        await wcProvider.disconnect();
-      } catch (error) {
-        console.error('Disconnect error:', error);
-      }
-    }
+    console.log("🔄 Starting wallet logout...");
     
+    // Set disconnecting flag to prevent auto-reconnect
+    setIsDisconnecting(true);
+    
+    try {
+      // Clean up modal observer if it exists
+      if (wcProvider && wcProvider._modalObserver) {
+        wcProvider._modalObserver.disconnect();
+        delete wcProvider._modalObserver;
+      }
+
+      // Disconnect WalletConnect properly
+      if (wcProvider) {
+        try {
+          // Disconnect from WalletConnect
+          await wcProvider.disconnect();
+          console.log("✅ WalletConnect disconnected");
+          
+          // Clean up WalletConnect provider
+          setWcProvider(null);
+        } catch (error) {
+          console.error('WalletConnect disconnect error:', error);
+        }
+      }
+      
+      // For MetaMask, try to request account change (this will trigger user to manually disconnect)
+      if (window.ethereum && window.ethereum.isMetaMask && account) {
+        try {
+          // Try to revoke permissions (newer MetaMask versions)
+          await window.ethereum.request({
+            method: "wallet_revokePermissions",
+            params: [{ eth_accounts: {} }]
+          });
+          console.log("✅ MetaMask permissions revoked");
+        } catch (revokeError) {
+          console.log("MetaMask permission revocation not supported:", revokeError.message);
+          
+          // Fallback: Request permissions again (this will show permission dialog)
+          try {
+            await window.ethereum.request({
+              method: 'wallet_requestPermissions',
+              params: [{ eth_accounts: {} }]
+            });
+          } catch (permError) {
+            console.log("MetaMask permission request failed:", permError.message);
+          }
+        }
+      }
+      
+      // Disconnect wallet from server
+      if (authService.isAuthenticated()) {
+        try {
+          await authService.disconnectWallet();
+          console.log("✅ Wallet disconnected from server");
+        } catch (error) {
+          console.error("Disconnect wallet from server error:", error);
+        }
+      }
+      
+    } catch (error) {
+      console.error("Error during wallet logout:", error);
+    } finally {
+      // Always clear all wallet-related data regardless of errors
+      console.log("🧹 Cleaning up all wallet data...");
+      
+      // Mark disconnect time to prevent immediate auto-reconnect
+      localStorage.setItem('lastDisconnectTime', Date.now().toString());
+      
+      // Clear all localStorage wallet data
+      localStorage.removeItem('walletType');
+      localStorage.removeItem('walletconnect');
+      localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+      localStorage.removeItem('wc@2:client:0.3//session');
+      localStorage.removeItem('wc@2:core:0.3//messages');
+      localStorage.removeItem('wc@2:universal_provider://');
+      
+      // Clear sessionStorage wallet data
+      sessionStorage.removeItem('walletconnect');
+      sessionStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+      
+      // Clear any other WalletConnect related storage
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('walletconnect') || key.includes('wc@2') || key.includes('wagmi')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.includes('walletconnect') || key.includes('wc@2') || key.includes('wagmi')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+      
+      // Reset all states
+      setAccount(null);
+      setSigner(null);
+      setProvider(null);
+      setContracts({});
+      setWcProvider(null);
+      setIsAdmin(false);
+      
+      console.log("✅ All wallet data cleared");
+      console.log("✅ Wallet logout completed");
+      
+      // Reset disconnecting flag after cleanup is complete
+      setTimeout(() => {
+        setIsDisconnecting(false);
+      }, 3000);
+    }
+  };
+
+  // Force disconnect and refresh - for complete wallet disconnect
+  const forceDisconnectAndRefresh = async () => {
+    console.log("🔄 Starting force disconnect and refresh...");
+    
+    // Set disconnecting flag
+    setIsDisconnecting(true);
+    
+    // Perform logout
+    await logout();
+    
+    console.log("🔄 Refreshing page to ensure complete disconnect...");
+    
+    // Force refresh after a short delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  };
+
+  // Complete logout (wallet + server)
+  const completeLogout = async () => {
+    console.log("🔄 Starting complete logout...");
+    
+    // Set disconnecting flag
+    setIsDisconnecting(true);
+    
+    // Mark disconnect time to prevent immediate auto-reconnect
+    localStorage.setItem('lastDisconnectTime', Date.now().toString());
+    
+    // Logout wallet first
+    await logout();
+    
+    // Logout from server
+    authService.logout();
+    
+    // Clear all possible wallet-related storage
+    localStorage.removeItem('walletType');
+    localStorage.removeItem('walletconnect');
+    localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+    sessionStorage.removeItem('walletconnect');
+    sessionStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+    
+    // Update authentication state
     setIsAuthenticated(false);
-    setAccount(null);
-    setSigner(null);
-    setProvider(null);
-    setContracts({});
+    
+    console.log("✅ Complete logout finished");
+    
+    // Add a small delay before redirect to ensure all cleanup is done
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 500);
   };
 
   // Check if user is admin
   const checkIfAdmin = async (userAddress) => {
     if (!userAddress) return false;
-    if (!contracts.loan) return false;
+    if (!contracts?.loan) return false;
     
     try {
-      const admins = await getAdmins();
+      const admins = await contracts.loan.getAdmins();
       if (!admins || !Array.isArray(admins)) return false;
 
       const normalizedUserAddress = userAddress.toLowerCase();
@@ -351,7 +725,7 @@ export const useAuthClient = () => {
     }
   };
 
-  const getUserCollaterals = async (userAddress) => {
+  const getUserCollaterals = useCallback(async (userAddress) => {
     try {
       const allCollaterals = await contracts.loan.getCollaterals(userAddress, 0, true);
 
@@ -367,9 +741,9 @@ export const useAuthClient = () => {
       console.error("Error fetching user collaterals:", error);
       return [];
     }
-  };
+  }, [contracts.loan]);
   
-  const getPendingCollaterals = async () => {
+  const getPendingCollaterals = useCallback(async () => {
     try {
       const collaterals = await contracts.loan.getCollaterals(ethers.constants.AddressZero, 0, false);
       return await Promise.all(collaterals.map(async collateral => {
@@ -384,9 +758,9 @@ export const useAuthClient = () => {
       console.error("Error fetching pending collaterals:", error);
       return [];
     }
-  };
+  }, [contracts.loan]);
   
-  const getAcceptedCollaterals = async () => {
+  const getAcceptedCollaterals = useCallback(async () => {
     try {
       const collaterals = await contracts.loan.getCollaterals(ethers.constants.AddressZero, 1, false);
       return await Promise.all(collaterals.map(async collateral => {
@@ -401,7 +775,7 @@ export const useAuthClient = () => {
       console.error("Error fetching accepted collaterals:", error);
       return [];
     }
-  };  
+  }, [contracts.loan]);  
   
   const getOpenAuctions = async () => {
     try {
@@ -485,7 +859,7 @@ export const useAuthClient = () => {
     }
   };
   
-  const getLoansForUserCollaterals = async (userAddress) => {
+  const getLoansForUserCollaterals = useCallback(async (userAddress) => {
     try {
       const [borrowerLoans, borrowerCollaterals] = await contracts.loan.getLoans(userAddress, 0, false, true);
     
@@ -526,9 +900,9 @@ export const useAuthClient = () => {
       console.error("Error fetching loans for user collaterals:", error);
       return [];
     }
-  };
+  }, [contracts.loan]);
   
-  const getActiveLoansForUser = async (userAddress) => {
+  const getActiveLoansForUser = useCallback(async (userAddress) => {
     try {
       const [loans, collaterals] = await contracts.loan.getLoans(userAddress, 0, false, false);
       return await Promise.all(loans.map(async (loan, index) => {
@@ -546,7 +920,7 @@ export const useAuthClient = () => {
       console.error("Error fetching active loans:", error);
       return [];
     }
-  };
+  }, [contracts.loan]);
   
   const getLoansByStatus = async (status) => {
     try {
@@ -688,26 +1062,71 @@ export const useAuthClient = () => {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.ethereum !== undefined) {
       const handleAccountsChanged = (accounts) => {
+        console.log("🔄 MetaMask accounts changed:", accounts);
         if (accounts.length === 0) {
+          console.log("🔄 MetaMask disconnected - clearing all wallet data");
+          
+          // Mark disconnect time
+          localStorage.setItem('lastDisconnectTime', Date.now().toString());
+          
           setAccount(null);
-          toast.error('No accounts connected to the site');
+          setSigner(null);
+          setProvider(null);
+          setContracts({});
+          
+          // Clear wallet storage
+          localStorage.removeItem('walletType');
+          
+          // Set disconnecting flag to prevent auto-reconnect
+          setIsDisconnecting(true);
+          setTimeout(() => {
+            setIsDisconnecting(false);
+          }, 3000);
         } else {
           setAccount(accounts[0]);
-          toast.success(`Connected to account: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`);
         }
+        // Note: User feedback (toasts) and wallet connection API calls 
+        // are handled by the Navbar component to prevent duplicates
       };
 
       const handleChainChanged = (newChainId) => {
         const parsedChainId = parseInt(newChainId, 16);
-        // setChainId(parsedChainId);
-        toast.info(`Network Changed to Chain Id: ${parsedChainId}`, { toastId: 'changeChainId' });
+        // Only show toast when user is logged in
+        if (authService.isAuthenticated()) {
+          toast.info(`Network Changed to Chain Id: ${parsedChainId}`, { toastId: 'changeChainId' });
+        }
+        // Reload page to reset provider and contracts
+        window.location.reload();
       };
 
       const handleDisconnect = (error) => {
-        console.log("Disconnect event:", error);
+        console.log("🔄 MetaMask disconnect event triggered - performing full cleanup");
+        
+        // Mark disconnect time
+        localStorage.setItem('lastDisconnectTime', Date.now().toString());
+        
+        // Full cleanup
         setAccount(null);
-        setIsAuthenticated(false);
-        toast.error('Wallet disconnected');
+        setSigner(null);
+        setProvider(null);
+        setContracts({});
+        
+        // Only show toast when user is logged in
+        if (authService.isAuthenticated()) {
+          setIsAuthenticated(false);
+          toast.error('Wallet disconnected');
+        }
+        
+        // Clear wallet storage
+        localStorage.removeItem('walletType');
+        localStorage.removeItem('walletconnect');
+        localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
+        
+        // Set disconnecting flag to prevent auto-reconnect
+        setIsDisconnecting(true);
+        setTimeout(() => {
+          setIsDisconnecting(false);
+        }, 3000);
       };
 
       window.ethereum.on('accountsChanged', handleAccountsChanged);
@@ -720,7 +1139,10 @@ export const useAuthClient = () => {
         window.ethereum.removeListener('disconnect', handleDisconnect);
       };
     } else {
-      toast.error('Metamask is not installed', { toastId: 'metamask-missing' });
+      // Only show MetaMask missing error when user is logged in
+      if (authService.isAuthenticated()) {
+        toast.error('Metamask is not installed', { toastId: 'metamask-missing' });
+      }
     }
   }, []);
 
@@ -728,11 +1150,14 @@ export const useAuthClient = () => {
     isAuthenticated,
     login,
     logout,
+    completeLogout,
+    forceDisconnectAndRefresh,
     isAdmin,
     provider,
     signer,
     account,
     contracts,
+    isDisconnecting,
     addCollateral,
     placeBid,
     closeAuction,

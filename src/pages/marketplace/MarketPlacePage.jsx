@@ -4,6 +4,7 @@ import { ArrowUpDown, Check, ChevronDown, Filter, Search } from "lucide-react";
 import useClickOutSide from "../../hooks/useClickOutSide";
 import { TabLoan } from "../../components/TabLoan/TabLoan";
 import { TabMarket } from "../../components/TabMarket/TabMarket";
+import useTheme from "../../hooks/useTheme";
 
 const options = [
   "All Assets",
@@ -15,6 +16,8 @@ const options = [
 export const CustomSelect = () => {
   const { show, setShow, nodeRef } = useClickOutSide();
   const [selected, setSelected] = useState(options[0]);
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
 
   const handleSelect = (option) => {
     setSelected(option);
@@ -48,8 +51,11 @@ export const CustomSelect = () => {
   );
 };
 export const MarketPlacePage = () => {
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
+
   return (
-    <div className={styles.wrapContainer}>
+    <div className={`${styles.wrapContainer} ${isDarkMode ? styles.dark : ""}`}>
       <div className={styles.container}>
         <div className={styles.wrapFirstContent}>
           <div className={styles.content}>
@@ -58,7 +64,7 @@ export const MarketPlacePage = () => {
               Browse and bid on collateralized loan opportunities
             </p>
           </div>
-          <div className={styles.primaryButton}>Create Loan Listing</div>
+          {/* <div className={styles.primaryButton}>Create Loan Listing</div> */}
         </div>
 
         <div className={styles.wrapSecondContent}>
