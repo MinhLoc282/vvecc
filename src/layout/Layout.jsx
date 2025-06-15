@@ -1,21 +1,17 @@
-import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-
-import Header from "./header/Header";
-
 import styles from "./index.module.css";
 import Navbar from "./navbar/Navbar";
 
+import useTheme from "../hooks/useTheme";
+
 function Layout() {
-  const [openMenu, setOpenMenu] = useState(false);
-
-
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
   return (
     <div>
-      {/* <Header /> */}
       <Navbar />
 
-      <div className={styles.Outlet}>
+      <div className={`${styles.Outlet} ${isDarkMode ? styles.dark : ""}`}>
         <Outlet  />
       </div>
     </div>

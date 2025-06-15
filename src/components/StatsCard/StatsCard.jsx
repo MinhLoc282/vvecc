@@ -1,23 +1,28 @@
-import React from "react";
 import styles from "./index.module.css";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import UpIcon from "../../assets/up.svg";
+import DownIcon from "../../assets/down.svg";
+
+import useTheme from "../../hooks/useTheme";
 
 export const StatsCard = ({ title, value, change, trend, icon }) => {
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
+
   return (
-    <div className={styles.wrapCard}>
+    <div className={`${styles.wrapCard} ${isDarkMode ? styles.dark : ""}`}>
       <div className={styles.card}>
         <div className={styles.wrapFirstContent}>
           <div className={styles.wrapContent}>
             <p className={styles.title}>{title}</p>
-            <h3 className={styles.value}>{value}</h3>
+            {icon && <div className={styles.iconWrapper}>{icon}</div>}
           </div>
-          {icon && <div className={styles.iconWrapper}>{icon}</div>}
+          <h3 className={styles.value}>{value}</h3>
         </div>
         <div className={styles.trend}>
           {trend === "up" ? (
-            <ArrowUp className={styles.trendIcon} />
+            <img src={UpIcon} alt="Up" className={styles.trendIcon} />
           ) : trend === "down" ? (
-            <ArrowDown className={styles.trendIcon} />
+            <img src={DownIcon} alt="Down" className={styles.trendIcon} />
           ) : null}
           <span
             className={

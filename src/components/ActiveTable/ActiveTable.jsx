@@ -1,22 +1,9 @@
 import { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Typography,
-  Box,
-  Tabs,
-  Tab,
-  CircularProgress,
-} from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { useAuth } from "../../hooks/use-auth-client";
 import { BigNumber, ethers } from "ethers";
 import { toast } from "react-toastify";
+import useTheme from "../../hooks/useTheme";
 import styles from "./index.module.css";
 import { bytes32ToString } from "../../utils";
 
@@ -29,6 +16,9 @@ export const ActiveTable = () => {
     contracts,
     account,
   } = useAuth();
+
+  const { theme } = useTheme({});
+  const isDarkMode = theme === "dark";
 
   const [myActiveLoans, setMyActiveLoans] = useState([]);
   const [loadingAccept, setLoadingAccept] = useState(false);
@@ -77,9 +67,8 @@ export const ActiveTable = () => {
       setLoadingCancel((prev) => ({ ...prev, [loanId]: false }));
     }
   };
-
   return (
-    <div className={styles.loanContainer}>
+    <div className={`${styles.loanContainer} ${isDarkMode ? styles.dark : ""}`}>
       <table className={styles.loanTable}>
         <thead>
           <tr>
@@ -111,36 +100,37 @@ export const ActiveTable = () => {
                 <td>
                   ${ethers.utils?.formatUnits(loan.loanAmount, 18)}
                 </td>
-                <td>{loan.duration?.toString()} months</td>
-                <td>
+                <td>{loan.duration?.toString()} months</td>                <td>
                   {!loan.accepted ? (
                     BigNumber.from(loan.acceptedLoanId).toNumber() !== 0 ? (
-                      <Button
-                        color="error"
+                      <button
+                        className={styles.loanButton}
                         onClick={() => handleCancelLoan(loan.loanId)}
                         disabled={loadingCancel[loan.loanId]}
                       >
                         {loadingCancel[loan.loanId] ? (
-                          <CircularProgress size={24} />
+                          <CircularProgress size={16} color="inherit" />
                         ) : (
                           "Reclaim"
                         )}
-                      </Button>
+                      </button>
                     ) : (
-                      <Button
-                        color="error"
+                      <button
+                        className={styles.loanButton}
                         onClick={() => handleCancelLoan(loan.loanId)}
                         disabled={loadingCancel[loan.loanId]}
                       >
                         {loadingCancel[loan.loanId] ? (
-                          <CircularProgress size={24} />
+                          <CircularProgress size={16} color="inherit" />
                         ) : (
                           "Cancel"
                         )}
-                      </Button>
+                      </button>
                     )
                   ) : (
-                    <Button disabled>Accepted</Button>
+                    <button className={`${styles.loanButton} ${styles.acceptedButton}`} disabled>
+                      Accepted
+                    </button>
                   )}
                 </td>
               </tr>

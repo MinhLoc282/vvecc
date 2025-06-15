@@ -1,51 +1,190 @@
 .loanContainer {
   overflow-x: auto; /* Hỗ trợ cuộn ngang */
+  background-color: #ffffff;
 }
 
 .loanTable {
   width: 100%;
-
   border-collapse: separate; /* Đảm bảo border-radius hoạt động */
   border-spacing: 0; /* Loại bỏ khoảng trống giữa các ô */
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
   table-layout: initial;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .loanTable th,
 .loanTable td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-  color: hsl(var(--primary));
+  padding: 16px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1f2937;
   text-align: left;
   white-space: nowrap; /* Ngăn ngừa xuống dòng */
+  transition: background-color 0.2s ease;
 }
 
 .loanTable tr:last-child td {
   border-bottom: none;
 }
 
+.loanTable tr:hover td {
+  background-color: #f1f5f9;
+}
+
 .loanTable th {
-  color: hsl(var(--muted-foreground));
-  font-weight: 500;
+  background-color: #f8fafc;
+  color: #6b7280;
+  font-weight: 600;
   font-size: 14px;
+  line-height: 1.4;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.loanTable th:first-child {
+  border-top-left-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.loanTable th:last-child {
+  border-top-right-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.loanTable tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+  background-color: #ffffff;
+}
+
+.loanTable tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+  background-color: #ffffff;
 }
 
 .loanButton {
-  background-color: #236cb2;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  height: 2.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #000000;
+  color: #ffffff;
   border: none;
-  padding: 8px 12px;
   cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s ease;
+  min-width: 100px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .loanButton:hover {
-  background-color: #1a4e89;
+  background-color: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Đảm bảo bảng cuộn ngang khi màn hình nhỏ */
+.loanButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.loanButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.acceptedButton {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.acceptedButton:hover {
+  background-color: #10b981 !important;
+  transform: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.noData {
+  text-align: center;
+  color: #6b7280;
+  padding: 24px;
+  font-style: italic;
+}
+
+/* Dark mode table styling - Using direct color values */
+.loanContainer.dark {
+  background-color: #0f1419;
+}
+
+.loanContainer.dark .loanTable {
+  background-color: #1a202c;
+  border-color: #2d3748;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.loanContainer.dark .loanTable th {
+  background-color: #2d3748;
+  color: #a0aec0;
+  border-bottom-color: #4a5568;
+}
+
+.loanContainer.dark .loanTable th,
+.loanContainer.dark .loanTable td {
+  border-bottom-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.loanContainer.dark .loanTable tr:hover td {
+  background-color: #2d3748;
+}
+
+/* Dark mode corner cell styling to fix brightness issues */
+.loanContainer.dark .loanTable th:first-child,
+.loanContainer.dark .loanTable th:last-child {
+  background-color: #2d3748;
+}
+
+.loanContainer.dark .loanTable tr:last-child td:first-child,
+.loanContainer.dark .loanTable tr:last-child td:last-child {
+  background-color: #1a202c;
+}
+
+.loanContainer.dark .loanTable tr:hover td:first-child,
+.loanContainer.dark .loanTable tr:hover td:last-child {
+  background-color: #2d3748;
+}
+
+.loanContainer.dark .loanButton {
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.loanContainer.dark .loanButton:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+.loanContainer.dark .acceptedButton {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.loanContainer.dark .acceptedButton:hover {
+  background-color: #10b981 !important;
+}
+
+.loanContainer.dark .noData {
+  color: #a0aec0;
+}
+
+/* Responsive design for mobile devices */
 @media screen and (max-width: 768px) {
   .loanContainer {
     overflow-x: auto;
@@ -54,5 +193,18 @@
   .loanTable {
     display: block;
     width: max-content;
+  }
+
+  .loanTable th,
+  .loanTable td {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .loanButton {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    min-width: 80px;
+    height: 2rem;
   }
 }
